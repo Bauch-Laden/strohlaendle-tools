@@ -1,0 +1,600 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Checklisten – Bauch-Laden & Bauch & Flamme</title>
+<style>
+  :root {
+    --accent: #FF9A00;
+    --accent-dark: #FF6700;
+    --dark: #2B2620;
+    --cream: #FBF7F0;
+    --line: #E8E0D3;
+    --text: #3A342C;
+    --muted: #766F63;
+    --green: #3C8A5B;
+  }
+  body.brand-bf {
+    --accent: #C42829;
+    --accent-dark: #FF6700;
+  }
+  * { box-sizing: border-box; }
+  body {
+    margin: 0;
+    font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+    background: var(--cream);
+    color: var(--text);
+    line-height: 1.5;
+  }
+  .wrap { max-width: 640px; margin: 0 auto; padding: 24px 20px 100px; }
+  .screen { display: none; }
+  .screen.active { display: block; }
+  .eyebrow { color: var(--accent-dark); font-weight: 700; letter-spacing: 0.08em; font-size: 0.75rem; text-transform: uppercase; }
+  h1 { font-size: 1.6rem; margin: 6px 0 20px; color: var(--dark); }
+
+  .brand-choice-card {
+    display: block; text-align: center;
+    background: #fff; border: 2px solid var(--line); border-radius: 14px;
+    padding: 28px 20px; margin-bottom: 16px; cursor: pointer; font-weight: 700; font-size: 1.1rem;
+  }
+  .brand-choice-card.bl { color: #FF9A00; border-color: #FF9A00; }
+  .brand-choice-card.bf { color: #C42829; border-color: #C42829; }
+  .brand-choice-card:hover { background: #FFF8EF; }
+
+  .menu-card {
+    display: flex; align-items: center; gap: 14px;
+    background: #fff; border: 1px solid var(--line); border-radius: 12px;
+    padding: 18px 20px; margin-bottom: 12px; cursor: pointer;
+  }
+  .menu-card:hover { border-color: var(--accent); }
+  .menu-icon { font-size: 1.6rem; }
+  .menu-text { flex: 1; }
+  .menu-title { font-weight: 700; color: var(--dark); }
+  .menu-sub { font-size: 0.82rem; color: var(--muted); }
+  .menu-arrow { color: var(--accent); font-size: 1.2rem; }
+
+  .back-link {
+    display: inline-block; color: var(--accent-dark); text-decoration: none;
+    font-weight: 600; margin-bottom: 16px; cursor: pointer;
+  }
+
+  .progress-bar-outer {
+    background: var(--line); border-radius: 20px; height: 10px; overflow: hidden; margin-bottom: 20px;
+  }
+  .progress-bar-inner { background: var(--accent); height: 100%; width: 0%; transition: width 0.2s; }
+  .progress-label { font-size: 0.85rem; color: var(--muted); margin-bottom: 6px; }
+
+  .step {
+    display: flex; align-items: flex-start; gap: 12px;
+    background: #fff; border: 1px solid var(--line); border-radius: 10px;
+    padding: 14px 16px; margin-bottom: 10px; cursor: pointer;
+  }
+  .step.checked { background: #F3F8F5; border-color: var(--green); }
+  .step.checked .step-text { text-decoration: line-through; color: var(--muted); }
+  .step-checkbox {
+    flex-shrink: 0; width: 24px; height: 24px; border-radius: 6px;
+    border: 2px solid var(--line); display: flex; align-items: center; justify-content: center;
+    font-weight: 700; color: #fff; margin-top: 1px;
+  }
+  .step.checked .step-checkbox { background: var(--green); border-color: var(--green); }
+  .step-text { font-size: 0.95rem; }
+
+  .ref-item {
+    background: #fff; border: 1px solid var(--line); border-radius: 10px;
+    padding: 12px 16px; margin-bottom: 8px; font-size: 0.95rem;
+  }
+
+  .section-label {
+    font-weight: 700; color: var(--accent-dark); margin: 22px 0 10px;
+    font-size: 0.85rem; text-transform: uppercase; letter-spacing: 0.04em;
+  }
+  .section-label:first-child { margin-top: 0; }
+
+  .btn {
+    display: inline-block; background: var(--accent); color: #fff; border: none;
+    padding: 12px 22px; border-radius: 8px; font-size: 0.95rem; font-weight: 600;
+    cursor: pointer; margin-top: 16px; margin-right: 8px;
+  }
+  .btn.secondary { background: transparent; color: var(--accent-dark); border: 2px solid var(--accent-dark); }
+  .draft-note {
+    background: #FFF1DC; border: 1px dashed var(--accent); border-radius: 8px;
+    padding: 10px 14px; font-size: 0.82rem; color: var(--muted); margin-bottom: 18px;
+  }
+  .brand-tag {
+    display: inline-block; font-size: 0.75rem; font-weight: 700; padding: 3px 10px;
+    border-radius: 12px; margin-bottom: 14px;
+  }
+  .brand-tag.bl { background: #FFF1DC; color: #FF9A00; }
+  .brand-tag.bf { background: #FBE3E3; color: #C42829; }
+</style>
+</head>
+<body id="body-el">
+<div class="wrap">
+
+  <!-- BRAND CHOICE -->
+  <section class="screen active" id="screen-brand-choice">
+    <div class="eyebrow">Checklisten</div>
+    <h1>Für welches Konzept?</h1>
+    <div class="brand-choice-card bl" onclick="chooseBrand('bl')">🧡 Bauch-Laden</div>
+    <div class="brand-choice-card bf" onclick="chooseBrand('bf')">🔥 Bauch & Flamme</div>
+  </section>
+
+  <!-- MENU -->
+  <section class="screen" id="screen-menu">
+    <span class="back-link" onclick="goToBrandChoice()">← Konzept wechseln</span>
+    <div class="eyebrow" id="menu-eyebrow">Bauch-Laden</div>
+    <span class="brand-tag" id="menu-brand-tag"></span>
+    <h1>Checklisten</h1>
+    <div class="menu-card" onclick="openChecklist('aufbau')">
+      <div class="menu-icon">🚚</div>
+      <div class="menu-text"><div class="menu-title">Start & Aufbau</div><div class="menu-sub">Vor Verkaufsstart</div></div>
+      <div class="menu-arrow">→</div>
+    </div>
+    <div class="menu-card" onclick="openReference('ablauf')">
+      <div class="menu-icon">📖</div>
+      <div class="menu-text"><div class="menu-title">Ablauf & Tipps</div><div class="menu-sub">Zum Nachlesen während der Schicht</div></div>
+      <div class="menu-arrow">→</div>
+    </div>
+    <div class="menu-card" onclick="openChecklist('abschluss')">
+      <div class="menu-icon">🏁</div>
+      <div class="menu-text"><div class="menu-title">Abschluss und Putzen</div><div class="menu-sub">Nach Verkaufsende</div></div>
+      <div class="menu-arrow">→</div>
+    </div>
+  </section>
+
+  <!-- CHECKLIST SCREEN (abhakbar: Aufbau / Abschluss) -->
+  <section class="screen" id="screen-checklist">
+    <span class="back-link" onclick="goToMenu()">← Zurück zur Übersicht</span>
+    <div class="eyebrow" id="checklist-eyebrow"></div>
+    <h1 id="checklist-title"></h1>
+    <div class="progress-label" id="progress-label">0 von 0 erledigt</div>
+    <div class="progress-bar-outer"><div class="progress-bar-inner" id="progress-bar"></div></div>
+    <div id="steps-container"></div>
+    <button class="btn secondary" onclick="resetChecklist()">Zurücksetzen</button>
+  </section>
+
+  <!-- REFERENCE SCREEN (nur lesen: Ablauf & Tipps) -->
+  <section class="screen" id="screen-reference">
+    <span class="back-link" onclick="goToMenu()">← Zurück zur Übersicht</span>
+    <div class="eyebrow" id="reference-eyebrow"></div>
+    <h1 id="reference-title"></h1>
+    <div id="reference-container"></div>
+  </section>
+
+</div>
+
+<script>
+  const content = {
+  "bl": {
+    "aufbau": {
+      "title": "Start & Aufbau-Checkliste",
+      "eyebrow": "Vor Verkaufsstart",
+      "sections": [
+        {
+          "label": null,
+          "steps": [
+            "Essen (Brotkisten, Isoboxen) niemals direkt auf dem Boden liegen lassen. Kurz eine leere Kiste darunterlegen und dann die Kiste mit Essen draufstellen.",
+            "Stehtische/Schauteller-Tische nach draußen stellen.",
+            "Arbeitsstart-Zeit dokumentiert?",
+            "Klappe öffnen.",
+            "Bildschirm richtig positionieren.",
+            "Media-Center-Strom anschließen.",
+            "App → VLC Player → Video starten.",
+            "Mehrfachsteckdose beim Eingang links unten einschalten.",
+            "Ersatz-Bonrolle auf dem Drucker (Grillecke + Kassenbereich) positionieren.",
+            "Große Mülltüte bei der Grillecke aufhängen.",
+            "Kleine Mülltüte unter der Salattheke aufhängen.",
+            "Wasserkanister unten auffüllen.",
+            "Wasser in das Heißwassergerät auffüllen.",
+            "Heißwassergerät einschalten, damit warmes fließendes Wasser verfügbar ist.",
+            "Grills auf 235 Grad einstellen (Mo-Mi: 2 Grills, Do-So: 3 Grills).",
+            "Handschuhe griffbereit und ausreichend vorhanden?",
+            "Desinfektionsmittel griffbereit und ausreichend vorhanden?",
+            "Schürze anziehen und ein Küchentuch an der Schürzenschnur aufhängen.",
+            "Namensschild angebracht?",
+            "Çiğköfte vorbereiten (5 kg Çiğköfte + 300-400 ml Wasser, 100 ml Olivenöl, 50 ml Granatapfelsirup).",
+            "Salattheke mit Tüchern abdecken, damit der Salat nicht gefriert und auch nicht in die Zwischenräume fällt.",
+            "Salate öffnen und an der Theke platzieren (in 1 oder 2 GN-1/2-Behältern).",
+            "Restliches Material (z. B. Hummus) in die Kühltheke platzieren.",
+            "Klassik-Fladenbrote und Gözlemes in die Behälter unter den Grills platzieren.",
+            "Oliven vorbereiten: Olivensaft abgießen, Olivenöl und getrocknete Gewürze (Thymian, Oregano, Majoran) hinzufügen, mischen und in den 1/4-Metall-GN-Behälter umfüllen.",
+            "Ajvar öffnen und in den 1/4-Metall-GN-Behälter umfüllen.",
+            "Sicherstellen, dass in der Kasse 200 € und 100 € Strohtaler verfügbar sind.",
+            "Kasse öffnen (mit 200 € Anfangsbestand). (Handy-Bildschirmcode: 111222, Handy-SIM-PIN: 4473)",
+            "Sicherstellen, dass beide Drucker und das Kartenlesegerät verbunden sind.",
+            "Test-Bestellung erstellen (z. B. über 5 €) und prüfen, ob sie auf dem Kartenlesegerät sichtbar ist – danach kann man sie wieder stornieren.",
+            "Eine Testbestellung eingeben und sicherstellen, dass Bestellbon und Kundenbeleg ausgedruckt werden.",
+            "Reis kochen (pro Packung Reis: 1x 1,5 l Wasser, Salz und Gemüsebrühe). Sobald der Reiskocher wieder auf Grün springt, kurz prüfen, ob der Reis fertig ist, und Mais in den Reiskocher geben.",
+            "Trio-Gemüsemischung ca. 15 Minuten in der Pfanne erwärmen.",
+            "Schwabenwrap-Bulgur-Rollen vorbereiten."
+          ]
+        },
+        {
+          "label": "Stationen: Klassik",
+          "steps": [
+            "Klassik-Fladenbrote, Salat, Oliven, Ajvar"
+          ]
+        },
+        {
+          "label": "Stationen: Gözleme/Teigtäschle",
+          "steps": [
+            "Teigtäschle Spinat-Käse und Kartoffel, Salat, Oliven, Ajvar"
+          ]
+        },
+        {
+          "label": "Stationen: Hummus-Bowl",
+          "steps": [
+            "Hausgemachter Hummus, Duftreis, Salat, Mais, Rotkohl, eingelegte Gurke, Ajvar, frische Tomaten, Oliven, Bowl-Brot, Tzatziki"
+          ]
+        },
+        {
+          "label": "Stationen: Schwabenwrap-Bulgur",
+          "steps": [
+            "Çiğköfte-Masse, Gurke, frische Tomaten, Salat, Zwiebel, Petersilie, Minze, Chips"
+          ]
+        },
+        {
+          "label": "Stationen: Schwabenwrap-Gemüse",
+          "steps": [
+            "Trio-Gemüse-Mischung, Gurke, frische Tomaten, Salat, Zwiebel, Petersilie, Minze, Chips"
+          ]
+        }
+      ]
+    },
+    "ablauf": {
+      "title": "Ablauf & Tipps",
+      "eyebrow": "Während der Schicht – zum Nachlesen",
+      "sections": [
+        {
+          "label": "Bestellung & Essensausgabe",
+          "steps": [
+            "Der Person immer den Beleg geben und die Abholnummer laut mitteilen (z. B. „Sie haben die Abholnummer 76“).",
+            "Bei der Essensausgabe die Person immer mit Nummer und Produkt aufrufen (z. B. „Nummer 76, Klassik-Fladenbrot“).",
+            "Wenn eine Bestellung an der Grillecke ausgedruckt wird, den Bon zuerst am Bonhalter platzieren – so behält man immer den Überblick."
+          ]
+        },
+        {
+          "label": "Kasse & Technik",
+          "steps": [
+            "Rote Linie beim Drucker → neue Rolle einlegen. Neue Rollen findest du im Kassenbereich in der Holzbox.",
+            "Pausenzeiten korrekt dokumentieren."
+          ]
+        },
+        {
+          "label": "Effizienz am Grill & bei der Bowl-Vorbereitung",
+          "steps": [
+            "Die Grills sind unser Flaschenhals! Deshalb: Wenn ein Produkt fertig gegrillt ist, wird zuerst die nächste Bestellung in den Grill gelegt, dann erst das fertige Produkt geschnitten und an die Kundschaft gegeben – so vermeidet man Leerlauf am Grill.",
+            "Bei der Bowl-Vorbereitung zuerst Reis, dann Salat und weiteres Material auf den Teller geben. Die Reisform nach der Verwendung immer ins Wasser legen, damit sie nicht austrocknet."
+          ]
+        },
+        {
+          "label": "Hygiene während der Schicht",
+          "steps": [
+            "Abwassertank regelmäßig kontrollieren. Wenn er in der Nähe der „STOP“-Markierung ist, kurz entleeren – danach neue Handschuhe anziehen.",
+            "Geld und Essen dürfen nicht mit denselben Handschuhen angefasst werden – das kommt außerdem bei aufmerksamen Kund*innen gut an.",
+            "Desinfektionsmittel, Fettlöser usw. immer an der Wasch-/Spülecke lassen, nicht neben dem Essen."
+          ]
+        },
+        {
+          "label": "Sauberkeit & Kontrolle im Kundenbereich",
+          "steps": [
+            "Ab und zu nach draußen gehen und schauen: Ist alles sauber? Ggf. den Kundenbereich mit Desinfektionsmittel putzen.",
+            "Ab und zu nach draußen gehen und schauen: Sind genug Besteck und Servietten vorhanden?",
+            "Ab und zu nach draußen gehen und schauen: Sind Salz, Pfeffer und Tabasco ausreichend vorhanden?"
+          ]
+        },
+        {
+          "label": "Kundenkommunikation & Allergene",
+          "steps": [
+            "Unsere Kund*innen erwarten von uns, dass wir auswendig wissen, was im Essen enthalten ist. Bei Fragen kurz die Info geben und auf die Allergene- & Zusatzstoffliste hinweisen, damit sie Allergene selbstständig prüfen können."
+          ]
+        },
+        {
+          "label": "Umgang mit Beschwerden",
+          "steps": [
+            "Wenn ein Kunde sich beschwert oder negatives Feedback gibt, gibt es meist 2 Gründe: 1) Er möchte dich bzw. euer Produkt ausnutzen (kommt bei uns sehr selten vor). 2) Er ist wirklich unzufrieden, und es stimmt tatsächlich etwas nicht mit Produkt oder Service.",
+            "Das Feedback bzw. die Beschwerde annehmen.",
+            "Deutlich sagen, dass es einem leid tut, und sich für das Feedback bedanken, z. B.: „Vielen Dank für Ihre Rückmeldung, es tut mir sehr leid, dass Sie unzufrieden sind.“",
+            "Ein neues Essen kostenlos anbieten, eine Alternative (Essen) kostenlos anbieten, oder das Geld zurückzahlen, z. B.: „Um es wiedergutzumachen, kann ich Ihnen eine neue Portion anbieten oder Ihr Geld zurückzahlen – was hätten Sie gerne?“",
+            "Dem Kunden kommunizieren, dass wir es intern im Rahmen unseres Qualitätsprozesses besprechen, z. B.: „Ich nehme das Thema gerne mit und informiere gleich meinen Chef.“ – ggf. kurz Orhun kontaktieren.",
+            "Das Thema kurz als Feedback notieren – entweder sofort oder spätestens am Ende des Tages an Orhun kommunizieren."
+          ]
+        }
+      ]
+    },
+    "abschluss": {
+      "title": "Abschluss und Putzen",
+      "eyebrow": "Nach Verkaufsende",
+      "sections": [
+        {
+          "label": null,
+          "steps": [
+            "Restliche Klassiks und Teigtäschle (Gözlemes) in den Kühlschrank oder Kühlwagen bringen.",
+            "Kühlware mit den entsprechenden Deckeln verschließen und in den Kühlschrank stellen.",
+            "Vorderseite/Kundenseite des Trucks putzen.",
+            "Salz-, Pfeffer- und Tabasco-Behälter putzen.",
+            "Bildschirm ausschalten und richtig positionieren.",
+            "(Siehe separate Putz-Guideline für Details.)",
+            "Klappe schließen – dabei muss eine Person im Wagen auf die Leuchtbälle achten, damit sie nicht zwischen Bildschirm und Klappe eingequetscht werden.",
+            "Bestandsaufnahme durchführen.",
+            "Stehtische zurück in den Truck stellen.",
+            "Kasse schließen: 200 € und 100 € Strohtaler in der Kasse belassen, den Rest an Ayse/Orhun übergeben.",
+            "Müll entsorgen.",
+            "Trinkgeld entleeren und unter den Mitarbeitenden aufteilen.",
+            "Beleuchtung ausschalten (Bälle-Schalter ist bei der Mehrfachsteckdose links unten am Eingang).",
+            "Arbeitsend-Zeit korrekt dokumentieren und von der Schichtleitung unterschreiben lassen.",
+            "Truck abschließen, Schlüssel an Orhun oder Ayse übergeben."
+          ]
+        },
+        {
+          "label": "Lessons Learned (an Orhun)",
+          "steps": [
+            "Was hat heute gut funktioniert?",
+            "Was sollen wir morgen anders machen, damit es besser läuft?",
+            "Neue Ideen? Unerwartete Probleme? Lösungsansätze?",
+            "Welche besonderen Aspekte sollen wir für die kommenden Tage berücksichtigen?",
+            "Gab es besondere Kundenkommentare (positiv oder negativ)?",
+            "Welches Essen war zu viel?",
+            "Welches Essen war zu wenig?"
+          ]
+        }
+      ]
+    }
+  },
+  "bf": {
+    "aufbau": {
+      "title": "Start & Aufbau-Checkliste",
+      "eyebrow": "Vor Verkaufsstart",
+      "sections": [
+        {
+          "label": null,
+          "steps": [
+            "Essen (Brotkisten, Isoboxen) niemals direkt auf dem Boden liegen lassen. Kurz eine leere Kiste darunterlegen und dann die Kiste mit Essen draufstellen.",
+            "Arbeitsstart-Zeit dokumentiert?",
+            "Klappe öffnen.",
+            "Bildschirm richtig positionieren.",
+            "Media-Center-Strom anschließen.",
+            "App → VLC Player → Video starten.",
+            "Große Mülltüte aufhängen.",
+            "Wasserkanister und HAndwaschbecken auffüllen",
+            "Grills und Friteuse einschalten und auf die richtige Temperatur einstellen",
+            "Bain Maries und Suppenbehälter (für Currywurst Sauce) einschalten",
+            "Desinfektionsmittel griffbereit und ausreichend vorhanden?",
+            "Schürze anziehen und ein Küchentuch an der Schürzenschnur aufhängen.",
+            "Namensschild angebracht?",
+            "Benötigtes Material aufmachen und platzieren",
+            "Nur für Bauch & Flamme: Feuerwurst, Rote Wurst, Thüringer ggf. einschneiden – dafür gibt es bereits eine Schneiderolle.",
+            "Wurst und Pommes Stationen starten",
+            "Sicherstellen, dass in der Kasse 200 € und 100 € Strohtaler verfügbar sind."
+          ]
+        }
+      ]
+    },
+    "ablauf": {
+      "title": "Ablauf & Tipps",
+      "eyebrow": "Während der Schicht – zum Nachlesen",
+      "sections": [
+        {
+          "label": "Kasse & Technik",
+          "steps": [
+            "Pausenzeiten korrekt dokumentieren."
+          ]
+        },
+        {
+          "label": "Effizienz am Grill & bei der Bowl-Vorbereitung",
+          "steps": [
+            "Die Grills sind unser Flaschenhals! Deshalb: Wenn ein Produkt fertig gegrillt ist, wird zuerst die nächste Bestellung in den Grill gelegt, dann erst das fertige Produkt geschnitten und an die Kundschaft gegeben – so vermeidet man Leerlauf am Grill."
+          ]
+        },
+        {
+          "label": "Hygiene während der Schicht",
+          "steps": [
+            "Abwassertank regelmäßig kontrollieren. Wenn er in der Nähe der „STOP“-Markierung ist, kurz entleeren – danach neue Handschuhe anziehen.",
+            "Geld und Essen dürfen nicht mit denselben Handschuhen angefasst werden – das kommt außerdem bei aufmerksamen Kund*innen gut an.",
+            "Desinfektionsmittel, Fettlöser usw. immer an der Wasch-/Spülecke lassen, nicht neben dem Essen."
+          ]
+        },
+        {
+          "label": "Sauberkeit & Kontrolle im Kundenbereich",
+          "steps": [
+            "Ab und zu nach draußen gehen und schauen: Ist alles sauber? Ggf. den Kundenbereich mit Desinfektionsmittel putzen.",
+            "Ab und zu nach draußen gehen und schauen: Sind genug Besteck und Servietten vorhanden?",
+            "Ab und zu nach draußen gehen und schauen: Sind Salz, Pfeffer und Tabasco ausreichend vorhanden?"
+          ]
+        },
+        {
+          "label": "Kundenkommunikation & Allergene",
+          "steps": [
+            "Unsere Kund*innen erwarten von uns, dass wir auswendig wissen, was im Essen enthalten ist. Bei Fragen kurz die Info geben und auf die Allergene- & Zusatzstoffliste hinweisen, damit sie Allergene selbstständig prüfen können."
+          ]
+        },
+        {
+          "label": "Umgang mit Beschwerden",
+          "steps": [
+            "Wenn ein Kunde sich beschwert oder negatives Feedback gibt, gibt es meist 2 Gründe: 1) Er möchte dich bzw. euer Produkt ausnutzen (kommt bei uns sehr selten vor). 2) Er ist wirklich unzufrieden, und es stimmt tatsächlich etwas nicht mit Produkt oder Service.",
+            "Das Feedback bzw. die Beschwerde annehmen.",
+            "Deutlich sagen, dass es einem leid tut, und sich für das Feedback bedanken, z. B.: „Vielen Dank für Ihre Rückmeldung, es tut mir sehr leid, dass Sie unzufrieden sind.“",
+            "Ein neues Essen kostenlos anbieten, eine Alternative (Essen) kostenlos anbieten, oder das Geld zurückzahlen, z. B.: „Um es wiedergutzumachen, kann ich Ihnen eine neue Portion anbieten oder Ihr Geld zurückzahlen – was hätten Sie gerne?“",
+            "Dem Kunden kommunizieren, dass wir es intern im Rahmen unseres Qualitätsprozesses besprechen, z. B.: „Ich nehme das Thema gerne mit und informiere gleich meinen Chef.“ – ggf. kurz Orhun kontaktieren.",
+            "Das Thema kurz als Feedback notieren – entweder sofort oder spätestens am Ende des Tages an Orhun kommunizieren."
+          ]
+        }
+      ]
+    },
+    "abschluss": {
+      "title": "Abschluss und Putzen",
+      "eyebrow": "Nach Verkaufsende",
+      "sections": [
+        {
+          "label": null,
+          "steps": [
+            "Kühlware mit den entsprechenden Deckeln verschließen und in den Kühlschrank stellen.",
+            "Vorderseite/Kundenseite der Hütte putzen.",
+            "Salz-, Pfeffer- und Tabasco-Behälter putzen.",
+            "Bildschirm ausschalten und richtig positionieren.",
+            "(Siehe separate Putz-Guideline für Details.)",
+            "Fenstern bzw Klappe schließen",
+            "Bestandsaufnahme durchführen.",
+            "Stehtische zurück in den Truck stellen.",
+            "Kasse schließen: 200 € und 100 € Strohtaler in der Kasse belassen, den Rest an Ayse/Orhun übergeben.",
+            "Nur für Bauch & Flamme: Zählprotokoll-Dokument ausfüllen und von Orhun unterschreiben lassen.",
+            "Nur für Bauch & Flamme: Einzeln kalkulieren, wie viele kg bzw. Portionen von welchem Produkt verkauft wurden.",
+            "Müll entsorgen.",
+            "Trinkgeld entleeren und unter den Mitarbeitenden aufteilen.",
+            "Beleuchtung ausschalten",
+            "Arbeitsend-Zeit korrekt dokumentieren und von der Schichtleitung unterschreiben lassen.",
+            "Hütte abschließen, Schlüssel an Orhun oder Ayse übergeben."
+          ]
+        },
+        {
+          "label": "Lessons Learned (an Orhun)",
+          "steps": [
+            "Was hat heute gut funktioniert?",
+            "Was sollen wir morgen anders machen, damit es besser läuft?",
+            "Neue Ideen? Unerwartete Probleme? Lösungsansätze?",
+            "Welche besonderen Aspekte sollen wir für die kommenden Tage berücksichtigen?",
+            "Gab es besondere Kundenkommentare (positiv oder negativ)?",
+            "Welches Essen war zu viel?",
+            "Welches Essen war zu wenig?"
+          ]
+        }
+      ]
+    }
+  }
+};
+
+  let currentBrand = null;
+  let currentChecked = [];
+
+  function applyBrandStyling() {
+    document.getElementById('body-el').className = currentBrand === 'bf' ? 'brand-bf' : 'brand-bl';
+    document.getElementById('menu-eyebrow').textContent = currentBrand === 'bf' ? 'Bauch & Flamme' : 'Bauch-Laden';
+    const tag = document.getElementById('menu-brand-tag');
+    tag.className = 'brand-tag ' + currentBrand;
+    tag.textContent = currentBrand === 'bf' ? '🔥 Bauch & Flamme Ansicht' : '🧡 Bauch-Laden Ansicht';
+  }
+
+  function chooseBrand(brand) {
+    currentBrand = brand;
+    applyBrandStyling();
+    const url = new URL(window.location.href);
+    url.searchParams.set('brand', brand);
+    window.history.replaceState({}, '', url);
+    showScreen('screen-menu');
+  }
+
+  function openChecklist(key) {
+    const data = content[currentBrand][key];
+    document.getElementById('checklist-eyebrow').textContent = data.eyebrow;
+    document.getElementById('checklist-title').textContent = data.title;
+
+    const flatSteps = [];
+    data.sections.forEach(sec => sec.steps.forEach(s => flatSteps.push(s)));
+    currentChecked = new Array(flatSteps.length).fill(false);
+
+    const container = document.getElementById('steps-container');
+    container.innerHTML = '';
+    let stepIndex = 0;
+    data.sections.forEach(sec => {
+      if (sec.label) {
+        const secLabel = document.createElement('div');
+        secLabel.className = 'section-label';
+        secLabel.textContent = sec.label;
+        container.appendChild(secLabel);
+      }
+      sec.steps.forEach(stepText => {
+        const idx = stepIndex;
+        const div = document.createElement('div');
+        div.className = 'step';
+        div.id = 'step-' + idx;
+        div.onclick = () => toggleStep(idx);
+        div.innerHTML = '<div class="step-checkbox">\u2713</div><div class="step-text"></div>';
+        div.querySelector('.step-text').textContent = stepText;
+        container.appendChild(div);
+        stepIndex++;
+      });
+    });
+
+    updateProgress();
+    showScreen('screen-checklist');
+  }
+
+  function openReference(key) {
+    const data = content[currentBrand][key];
+    document.getElementById('reference-eyebrow').textContent = data.eyebrow;
+    document.getElementById('reference-title').textContent = data.title;
+
+    const container = document.getElementById('reference-container');
+    container.innerHTML = '';
+    data.sections.forEach(sec => {
+      if (sec.label) {
+        const secLabel = document.createElement('div');
+        secLabel.className = 'section-label';
+        secLabel.textContent = sec.label;
+        container.appendChild(secLabel);
+      }
+      sec.steps.forEach(stepText => {
+        const div = document.createElement('div');
+        div.className = 'ref-item';
+        div.textContent = stepText;
+        container.appendChild(div);
+      });
+    });
+
+    showScreen('screen-reference');
+  }
+
+  function toggleStep(idx) {
+    currentChecked[idx] = !currentChecked[idx];
+    document.getElementById('step-' + idx).classList.toggle('checked', currentChecked[idx]);
+    updateProgress();
+  }
+
+  function updateProgress() {
+    const total = currentChecked.length;
+    const done = currentChecked.filter(Boolean).length;
+    document.getElementById('progress-label').textContent = done + ' von ' + total + ' erledigt';
+    document.getElementById('progress-bar').style.width = (total > 0 ? (done / total * 100) : 0) + '%';
+  }
+
+  function resetChecklist() {
+    currentChecked = currentChecked.map(() => false);
+    document.querySelectorAll('.step').forEach(el => el.classList.remove('checked'));
+    updateProgress();
+  }
+
+  function goToMenu() {
+    showScreen('screen-menu');
+  }
+
+  function goToBrandChoice() {
+    showScreen('screen-brand-choice');
+  }
+
+  function showScreen(id) {
+    document.querySelectorAll('.screen').forEach(s => s.classList.remove('active'));
+    document.getElementById(id).classList.add('active');
+    window.scrollTo(0, 0);
+  }
+
+  window.addEventListener('DOMContentLoaded', () => {
+    const params = new URLSearchParams(window.location.search);
+    const brandParam = params.get('brand');
+    const hash = window.location.hash.replace('#', '');
+
+    if (brandParam === 'bl' || brandParam === 'bf') {
+      currentBrand = brandParam;
+      applyBrandStyling();
+      if (hash === 'ablauf') {
+        openReference('ablauf');
+      } else if (hash === 'aufbau' || hash === 'abschluss') {
+        openChecklist(hash);
+      } else {
+        showScreen('screen-menu');
+      }
+    }
+  });
+</script>
+</body>
+</html>

@@ -1,0 +1,246 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Quiz-Auswertung – Strohländle 2026</title>
+<style>
+  :root {
+    --orange: #FF9A00;
+    --flame: #FF6700;
+    --dark: #2B2620;
+    --cream: #FBF7F0;
+    --line: #E8E0D3;
+    --text: #3A342C;
+    --muted: #766F63;
+    --green: #3C8A5B;
+    --red: #C42829;
+  }
+  * { box-sizing: border-box; }
+  body {
+    margin: 0;
+    font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+    background: var(--cream);
+    color: var(--text);
+    line-height: 1.6;
+  }
+  .wrap { max-width: 820px; margin: 0 auto; padding: 32px 24px 100px; }
+  .eyebrow { color: var(--flame); font-weight: 700; letter-spacing: 0.08em; font-size: 0.78rem; text-transform: uppercase; }
+  h1 { font-size: 1.7rem; margin: 8px 0 20px; color: var(--dark); }
+  .card { background: #fff; border: 1px solid var(--line); border-radius: 12px; padding: 24px; margin-bottom: 20px; }
+  textarea {
+    width: 100%; min-height: 160px; padding: 12px;
+    border: 1.5px solid var(--line); border-radius: 8px;
+    font-family: monospace; font-size: 0.85rem;
+  }
+  .btn {
+    display: inline-block; background: var(--orange); color: #fff; border: none;
+    padding: 12px 24px; border-radius: 8px; font-size: 1rem; font-weight: 600;
+    cursor: pointer; margin-top: 14px;
+  }
+  .btn:hover { background: var(--flame); }
+  .row-item {
+    display: flex; justify-content: space-between; align-items: center;
+    padding: 14px 0; border-bottom: 1px solid var(--line); gap: 16px;
+  }
+  .row-item:last-child { border-bottom: none; }
+  .qtext { flex: 1; font-size: 0.92rem; }
+  .stat-group { display: flex; gap: 8px; flex-shrink: 0; }
+  .stat-pill {
+    text-align: center; min-width: 62px; padding: 6px 10px; border-radius: 8px;
+    font-size: 0.8rem; font-weight: 700;
+  }
+  .stat-pill .num { display: block; font-size: 1.05rem; }
+  .stat-pill.correct { background: #E4F3EA; color: var(--green); }
+  .stat-pill.wrong { background: #FBE3E3; color: var(--red); }
+  .stat-pill.empty { background: #EFE8DA; color: var(--muted); }
+  .meta { color: var(--muted); font-size: 0.85rem; margin-top: 4px; }
+  .hint { color: var(--muted); font-size: 0.9rem; }
+  ol { padding-left: 20px; }
+  li { margin-bottom: 6px; }
+</style>
+</head>
+<body>
+<div class="wrap">
+  <div class="eyebrow">Bauch-Laden · Bauch & Flamme</div>
+  <h1>Quiz-Auswertung: Wo hakt es noch?</h1>
+
+  <div class="card">
+    <p><strong>So funktioniert's:</strong></p>
+    <ol>
+      <li>Öffne dein Google Sheet mit den Quiz-Antworten</li>
+      <li>Datei → Herunterladen → <strong>Kommagetrennte Werte (.csv)</strong></li>
+      <li>Öffne die CSV-Datei mit einem Texteditor (oder Excel → als Text kopieren), kopiere den <strong>gesamten Inhalt</strong> und füge ihn unten ein</li>
+      <li>Klick auf „Auswerten"</li>
+    </ol>
+    <p class="hint">Erwartete Spaltenreihenfolge: Zeitstempel, Vorname, Nachname, Punktzahl, Versuch, Antworten-Detail (50-stelliger 1/0-String)</p>
+    <textarea id="csv-input" placeholder="CSV-Inhalt hier einfügen..."></textarea>
+    <br>
+    <button class="btn" onclick="analyze()">Auswerten →</button>
+  </div>
+
+  <div class="card" id="summary-card" style="display:none;">
+    <p id="summary-text"></p>
+  </div>
+
+  <div class="card" id="results-card" style="display:none;">
+    <h3 style="margin-top:0;">Fragen nach Fehlerquote sortiert (am häufigsten falsch zuerst)</h3>
+    <div id="results-list"></div>
+  </div>
+</div>
+
+<script>
+  // Gleiche Fragen wie im Onboarding-Quiz, für die Anzeige der Fragetexte
+  const questions = [
+    "Wofür steht Bauch-Laden laut unserem Werte-Manifest, mehr als nur für gutes Essen?",
+    "Was bedeutet unser Wert 'Transparenz & Offenheit' konkret im Arbeitsalltag?",
+    "Wie handeln wir laut unserem Wert 'Qualität & Handwerk'?",
+    "Was gehört laut unserem Wert 'Respekt & Fairness' zu unserem Miteinander?",
+    "Wie beschreiben wir unseren Wert 'Teamgeist & Zusammenarbeit'?",
+    "Was ist unser Ziel laut dem Wert 'Freude & Gastfreundschaft'?",
+    "Wofür übernehmen wir laut unserem Wert 'Verantwortung & Haltung' Verantwortung?",
+    "Wie ist unsere Grundhaltung zur Arbeit formuliert?",
+    "Seit wie vielen Jahren gibt es Bauch-Laden bereits?",
+    "Zum wievielten Mal sind wir (Bauch-Laden und Bauch & Flamme) beim Strohländle-Festival dabei?",
+    "Was erwarten wir von euch bezüglich Lernen und Feedback?",
+    "Was passiert, wenn ihr während der Arbeit etwas von unserem Essen probieren möchtet?",
+    "Wie ist die Pausenregelung während der Arbeitszeit?",
+    "Wie ist die Handynutzung während der Arbeit geregelt?",
+    "Welche Flexibilität wird von euch während der Veranstaltung erwartet?",
+    "Welche besonderen Arbeitszeit-Regeln gelten für minderjährige Mitarbeitende?",
+    "Wie verlasst ihr korrekt kurz die Toilette während der Arbeit?",
+    "Wann müsst ihr während der Arbeit die Handschuhe wechseln?",
+    "Was gilt für Handschuhe, wenn ihr selbst esst oder trinkt?",
+    "An wen wendet ihr euch bei Fragen oder Problemen während des Einsatzes?",
+    "Warum muss jeder Eigenverzehr dokumentiert werden?",
+    "Wie wird Eigenverzehr bei Bauch & Flamme dokumentiert?",
+    "Wie wird Selbstverzehr bei Bauch-Laden dokumentiert?",
+    "Was passiert bei Bauch-Laden zusätzlich vor Verkaufsstart mit den Schautellern?",
+    "Wie viele kostenlose Mahlzeiten darf ein/e Mitarbeitende/r pro gearbeitetem Tag für den eigenen Verzehr nehmen?",
+    "Muss auch das kostenlose bzw. das 50% rabattierte Essen dokumentiert werden?",
+    "Welchen Rabatt bekommen Mitarbeitende von anderen Ständen (z. B. der Bar) bei uns?",
+    "Warum ist die korrekte Dokumentation von Eigenverzehr und Rabatten so wichtig?",
+    "Was gilt für Essen und Trinken im Food-Truck bzw. in der Hütte?",
+    "Wem gehört das Trinkgeld, das Kund*innen geben?",
+    "Was solltet ihr tun, wenn ein unerwartetes Ereignis (z. B. eine Verspätung) eintritt?",
+    "Was ist aktuell in Stuttgart zu beachten, das die Anfahrt beeinflussen kann?",
+    "Was besagt unsere 'Open Book Policy'?",
+    "Ab wann müssen Mitarbeitende unter 18 Jahren ihre erste Pause nehmen?",
+    "Welche Promillegrenze gilt für alle Mitarbeitenden während der Strohländle-Veranstaltung?",
+    "Wie ist der Umgang mit Cannabis bei der Arbeit geregelt?",
+    "Wer ist Schichtleiterin für Bauch-Laden?",
+    "Wer ist Schichtleiter für Bauch & Flamme?",
+    "Wie ist Orhun während der Strohländle-Veranstaltung erreichbar?",
+    "Was solltet ihr nach jedem Einsatz mit Orhun oder den Schichtleitungen teilen?",
+    "Wie oft müssen die Arbeitsstunden eingetragen werden?",
+    "Bei Bauch-Laden fragt ein Kunde, ob unser Ajvar scharf ist. Was antwortet ihr?",
+    "Bei Bauch-Laden wünscht sich eine Kundin glutenfreies Essen. Was könnt ihr ihr anbieten?",
+    "Bei Bauch-Laden fragt ein Kunde nach veganen Optionen. Was könnt ihr anbieten?",
+    "Bei Bauch-Laden beschwert sich ein Kunde, dass zu wenig Käse auf dem Fladenbrot war. Wie reagiert ihr?",
+    "Bei Bauch-Laden fragt ein Kunde, zu welcher Küche unser Essen gehört. Was antwortet ihr?",
+    "Bei Bauch-Laden ist der Ajvar gerade ausverkauft. Was könnt ihr stattdessen anbieten?",
+    "Bei Bauch-Laden fragt ein Kunde nach der Herkunft der Oliven. Was antwortet ihr?",
+    "Bei Bauch & Flamme fragt ein Kunde, woher die Wurst kommt. Was antwortet ihr?",
+    "Wer betreut bei Bauch & Flamme hauptsächlich die Pommes- und Wedges-Station bzw. den Grill?"
+  ];
+
+  function parseCsvLine(line) {
+    // Einfacher CSV-Parser, der Kommas innerhalb von Anführungszeichen respektiert
+    const result = [];
+    let cur = '';
+    let inQuotes = false;
+    for (let i = 0; i < line.length; i++) {
+      const ch = line[i];
+      if (ch === '"') {
+        if (inQuotes && line[i + 1] === '"') { cur += '"'; i++; }
+        else { inQuotes = !inQuotes; }
+      } else if (ch === ',' && !inQuotes) {
+        result.push(cur); cur = '';
+      } else {
+        cur += ch;
+      }
+    }
+    result.push(cur);
+    return result;
+  }
+
+  function analyze() {
+    const raw = document.getElementById('csv-input').value.trim();
+    if (!raw) { alert('Bitte zuerst CSV-Inhalt einfügen.'); return; }
+
+    const lines = raw.split(/\r?\n/).filter(l => l.trim().length > 0);
+    if (lines.length < 2) { alert('Keine Datenzeilen gefunden.'); return; }
+
+    // Erste Zeile ist Header, überspringen
+    const dataLines = lines.slice(1);
+
+    const wrongCount = new Array(questions.length).fill(0);
+    const unansweredCount = new Array(questions.length).fill(0);
+    const answeredCount = new Array(questions.length).fill(0);
+    let validRows = 0;
+
+    dataLines.forEach(line => {
+      const cols = parseCsvLine(line);
+      // Spalte 5 (Index 5) = Antworten-Detail, je nach Spaltenreihenfolge ggf. anpassen
+      const answerString = cols[5] ? cols[5].trim() : '';
+      if (answerString.length === questions.length && /^[01\-]+$/.test(answerString)) {
+        validRows++;
+        for (let i = 0; i < questions.length; i++) {
+          const ch = answerString[i];
+          if (ch === '-') {
+            unansweredCount[i]++;
+          } else {
+            answeredCount[i]++;
+            if (ch === '0') wrongCount[i]++;
+          }
+        }
+      }
+    });
+
+    if (validRows === 0) {
+      document.getElementById('summary-card').style.display = 'block';
+      document.getElementById('summary-text').innerHTML = '⚠️ Keine gültigen Antworten-Detail-Strings gefunden. Prüfe, ob die Spaltenreihenfolge stimmt (Zeitstempel, Vorname, Nachname, Punktzahl, Versuch, Antworten-Detail).';
+      document.getElementById('results-card').style.display = 'none';
+      return;
+    }
+
+    const stats = questions.map((q, i) => ({
+      question: q,
+      correct: answeredCount[i] - wrongCount[i],
+      wrong: wrongCount[i],
+      empty: unansweredCount[i],
+      answered: answeredCount[i],
+      pct: answeredCount[i] > 0 ? Math.round((wrongCount[i] / answeredCount[i]) * 100) : null
+    }));
+    // Fragen mit den meisten falschen Antworten zuerst, Fragen ganz ohne Antworten ans Ende
+    stats.sort((a, b) => {
+      if (a.pct === null && b.pct === null) return 0;
+      if (a.pct === null) return 1;
+      if (b.pct === null) return -1;
+      return b.pct - a.pct;
+    });
+
+    document.getElementById('summary-card').style.display = 'block';
+    document.getElementById('summary-text').innerHTML = `✅ Insgesamt <strong>${validRows}</strong> Versuche ausgewertet.`;
+
+    const listEl = document.getElementById('results-list');
+    listEl.innerHTML = '';
+    stats.forEach((s, idx) => {
+      const div = document.createElement('div');
+      div.className = 'row-item';
+      div.innerHTML = `
+        <div class="qtext">${idx + 1}. ${s.question}</div>
+        <div class="stat-group">
+          <div class="stat-pill correct"><span class="num">${s.correct}</span>Korrekt</div>
+          <div class="stat-pill wrong"><span class="num">${s.wrong}</span>Falsch</div>
+          <div class="stat-pill empty"><span class="num">${s.empty}</span>Leer</div>
+        </div>
+      `;
+      listEl.appendChild(div);
+    });
+
+    document.getElementById('results-card').style.display = 'block';
+  }
+</script>
+</body>
+</html>

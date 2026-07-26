@@ -1,0 +1,529 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Willkommen im Team – Strohländle 2026</title>
+<style>
+  :root {
+    --orange: #FF9A00;
+    --flame: #FF6700;
+    --dark: #2B2620;
+    --cream: #FBF7F0;
+    --line: #E8E0D3;
+    --text: #3A342C;
+    --muted: #766F63;
+    --green: #3C8A5B;
+    --red: #C42829;
+  }
+  * { box-sizing: border-box; }
+  body {
+    margin: 0;
+    font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+    background: var(--cream);
+    color: var(--text);
+    line-height: 1.6;
+  }
+  .wrap { max-width: 760px; margin: 0 auto; padding: 32px 24px 100px; }
+  .screen { display: none; }
+  .screen.active { display: block; }
+
+  .eyebrow {
+    color: var(--flame);
+    font-weight: 700;
+    letter-spacing: 0.08em;
+    font-size: 0.78rem;
+    text-transform: uppercase;
+  }
+  h1 { font-size: 1.9rem; margin: 8px 0 16px; color: var(--dark); }
+  h2 {
+    font-size: 1.4rem;
+    color: var(--dark);
+    border-left: 4px solid var(--orange);
+    padding-left: 12px;
+    margin: 40px 0 18px;
+  }
+  h3 { font-size: 1.1rem; color: var(--dark); margin-top: 28px; border-top: 2px solid var(--line); padding-top: 10px; }
+  h4 { font-size: 0.98rem; color: var(--flame); margin-top: 18px; }
+  p { margin: 10px 0; }
+  ul { padding-left: 22px; }
+  li { margin-bottom: 8px; }
+  table { border-collapse: collapse; width: 100%; margin: 16px 0; }
+  th, td { border: 1px solid var(--line); padding: 8px 12px; text-align: left; }
+  th { background: #FFF1DC; }
+  blockquote {
+    background: #FFF9F0;
+    border-left: 3px solid var(--orange);
+    margin: 12px 0;
+    padding: 10px 16px;
+    font-style: italic;
+  }
+  code { background: #EFE8DA; padding: 2px 6px; border-radius: 4px; }
+
+  .card {
+    background: #fff;
+    border: 1px solid var(--line);
+    border-radius: 12px;
+    padding: 28px;
+    margin-top: 20px;
+  }
+  .btn {
+    display: inline-block;
+    background: var(--orange);
+    color: #fff;
+    border: none;
+    padding: 12px 24px;
+    border-radius: 8px;
+    font-size: 1rem;
+    font-weight: 600;
+    cursor: pointer;
+    margin-top: 20px;
+    margin-right: 10px;
+  }
+  .btn:hover { background: var(--flame); }
+  .btn.secondary { background: transparent; color: var(--flame); border: 2px solid var(--flame); padding: 10px 22px; }
+  .btn.secondary:hover { background: #FFF1DC; }
+
+  .progress {
+    position: sticky; top: 0; background: var(--cream);
+    padding: 10px 0; font-size: 0.85rem; color: var(--muted);
+    border-bottom: 1px solid var(--line); margin-bottom: 10px;
+  }
+
+  .question {
+    margin-bottom: 28px;
+    padding-bottom: 20px;
+    border-bottom: 1px solid var(--line);
+  }
+  .question p.qtext { font-weight: 600; color: var(--dark); }
+  .option {
+    display: block;
+    padding: 10px 14px;
+    margin: 6px 0;
+    border: 1.5px solid var(--line);
+    border-radius: 8px;
+    cursor: pointer;
+    background: #fff;
+  }
+  .option:hover { border-color: var(--orange); }
+  .option input { margin-right: 10px; }
+
+  input[type="text"] {
+    width: 100%;
+    padding: 10px 12px;
+    border: 1.5px solid var(--line);
+    border-radius: 8px;
+    font-size: 1rem;
+    margin-top: 6px;
+  }
+  label.field { display: block; margin-top: 16px; font-weight: 600; }
+
+  .score-big { font-size: 3rem; font-weight: 800; color: var(--orange); margin: 10px 0; }
+  .score-sub { color: var(--muted); }
+</style>
+</head>
+<body>
+<div class="wrap">
+
+  <!-- SCREEN 1: WELCOME -->
+  <section class="screen active" id="screen-welcome">
+    <div class="eyebrow">Bauch-Laden · Bauch & Flamme</div>
+    <h1>Hallo & willkommen, liebe neue Kollegin, lieber neuer Kollege! 🧡</h1>
+    <p>Schön, dass du beim Strohländle-Festival 2026 dabei bist. Hiermit möchten wir dir die grundlegenden Informationen über <strong>Bauch-Laden</strong> und <strong>Bauch & Flamme</strong> mitteilen, bevor es losgeht.</p>
+    <p>Auf den nächsten Seiten findest du unseren Mitarbeiter-Guide. Danach gibt es ein kleines Quiz mit 50 Fragen, um zu prüfen, ob die wichtigsten Infos hängen geblieben sind – du kannst es so oft wiederholen, wie du möchtest.</p>
+    <button class="btn" onclick="showScreen('screen-content')">Los geht's →</button>
+  </section>
+
+  <!-- SCREEN 2: GUIDE CONTENT -->
+  <section class="screen" id="screen-content">
+    <div class="eyebrow">Mitarbeiter-Guide</div>
+    <h1>Strohländle 2026 – Alles, was du wissen musst</h1>
+
+    <p>Das Strohländle-Festival findet seit 2012 statt – 2026 ist somit die <strong>15. Ausgabe</strong>. Für uns ist es die <strong>erste Teilnahme</strong>! Unser Ziel: Die Gäste sollen am Ende der Veranstaltung zum Veranstalter Johannes gehen und sagen: <em>„Das Angebot, die Qualität und der Service waren dieses Jahr so gut wie noch nie!"</em></p>
+    <p>Bauch-Laden gibt es bereits seit <strong>über 7 Jahren</strong> – wir bringen also einiges an Erfahrung mit, auch wenn Strohländle für uns neu ist.</p>
+
+    <h2>0 · Werte, Manifest & Grundhaltung</h2>
+    <h3>🧡 Bauch-Laden und Bauch & Flamme stehen für mehr als nur gutes Essen.</h3>
+    <p>Wir glauben an bewusste Entscheidungen – für unsere Umwelt, unsere Gäste und unser Team. Unsere Werte sind nicht bloß Worte – sie zeigen sich in jeder Zutat, jedem Gespräch und jedem Einsatz.</p>
+    <h3>🌱 Nachhaltigkeit & Regionalität</h3>
+    <p>Wir achten auf Herkunft und Qualität. Wo immer möglich, arbeiten wir mit regionalen und biologisch erzeugten Produkten. So unterstützen wir faire Landwirtschaft und schonen Ressourcen.</p>
+    <h3>🫶 Transparenz & Offenheit</h3>
+    <p>Unsere Küche ist kein Geheimnis. Wer will, darf reinschauen – in den Food-Truck, auf die Zutatenliste oder in unser Handwerk. Offenheit schafft Vertrauen – und das leben wir jeden Tag.</p>
+    <h3>✋ Qualität & Handwerk</h3>
+    <p>Bei uns kommt nichts „von der Stange". Wir bereiten unsere Speisen frisch und mit Sorgfalt zu. Der Geschmack kommt von echten Zutaten, nicht von Zusatzstoffen.</p>
+    <h3>🤝 Respekt & Fairness</h3>
+    <p>Ob Kunde, Kollege oder Lieferant – wir begegnen allen mit Respekt. Entscheidungen treffen wir gemeinsam, Verantwortung tragen wir gemeinsam. Fairness ist für uns selbstverständlich.</p>
+    <h3>👥 Teamgeist & Zusammenarbeit</h3>
+    <p>Wir arbeiten nicht nebeneinander, sondern miteinander. Kommunikation auf Augenhöhe, gegenseitige Unterstützung und eine Prise Humor gehören bei uns dazu.</p>
+    <h3>😊 Freude & Gastfreundschaft</h3>
+    <p>Wer zu uns kommt, soll sich wohlfühlen – nicht nur satt werden. Wir servieren mit einem Lächeln und schaffen Begegnungen, die in Erinnerung bleiben.</p>
+    <h3>🔍 Verantwortung & Haltung</h3>
+    <p>Wir übernehmen Verantwortung – für Hygiene, Sicherheit und die Wirkung unseres Handelns. Wir wissen, dass wir mit unserem Tun einen Unterschied machen können – und wollen genau das.</p>
+
+    <h3>Grundhaltung</h3>
+    <p>Wir wollen hier <strong>sehr gut arbeiten, sehr gut liefern</strong> und unser <strong>wohlverdientes Geld genießen</strong>.</p>
+    <ul>
+      <li>Bleibt gegenüber Kund*innen, Kolleg*innen und Veranstalter*innen <strong>immer freundlich, höflich und professionell</strong> – auch wenn ihr anderer Meinung seid.</li>
+      <li><strong>Schichtleitungen treffen vor Ort die Entscheidungen.</strong> Solltet ihr weiterhin anderer Meinung sein, könnt ihr euch jederzeit an <strong>Orhun</strong> wenden.</li>
+      <li>Bei der Arbeit werden <strong>Rassismus, Sexismus oder ähnliche Formen der Diskriminierung nicht toleriert</strong>. Wir arbeiten hier alle gemeinsam hart und mit Respekt füreinander.</li>
+      <li>Auch der <strong>Veranstalter</strong> kann kommen und sich Essen abholen – dabei muss jedoch <strong>immer der Name notiert werden</strong>.</li>
+    </ul>
+
+    <h3>Lernoffenheit & Feedback</h3>
+    <p>Wir erwarten von euch <strong>Lernoffenheit und Feedbackoffenheit</strong>. Es gibt viele neue Dinge, die ihr lernen werdet, und dafür braucht es Bereitschaft (siehe z. B. das Kapitel zur Kundenkommunikation bei Bauch-Laden).</p>
+    <p>Gleichzeitig schätzen wir eure <strong>bisherige Erfahrung</strong> sehr – genau deshalb wollen wir mit euch arbeiten. Wenn ihr neue Ideen habt oder etwas seht, das verbessert werden könnte, teilt es uns gerne mit. Wir setzen es gemeinsam um.</p>
+
+    <h3>Einstiegsbonus & Starterpack</h3>
+    <p>Uns ist wichtig, dass es <strong>euch</strong> gut geht – denn nur wenn es euch gut geht, geht es auch unseren Kund*innen gut. Deshalb erhaltet ihr zu Beginn eurer Tätigkeit folgenden <strong>Einstiegsbonus</strong>:</p>
+    <table>
+      <tr><th>Beschäftigungsumfang</th><th>Bonus</th></tr>
+      <tr><td>Vollzeit (160h oder mehr)</td><td>100 €</td></tr>
+      <tr><td>Teilzeit (80h–160h)</td><td>50 €</td></tr>
+      <tr><td>Minijob</td><td>30 €</td></tr>
+    </table>
+    <p>Zusätzlich erhaltet ihr ein <strong>Überraschungs-Starterpack</strong>.</p>
+
+    <h3>Verhalten während der Arbeit</h3>
+    <ul>
+      <li><strong>Vor Kund*innen wird nicht gegessen.</strong> Wenn ihr etwas probieren möchtet, dreht euch kurz um und probiert unauffällig. Für die eigentliche Pause, in der ihr euer Essen genießt, geht bitte nach draußen.</li>
+      <li><strong>Ihr seid verpflichtet, eure Pausen zu nehmen</strong> (ab 6h Arbeitszeit mindestens 30 Minuten Pause, ab 9h mindestens 45 Minuten Pause). Sprecht dazu mit eurer Schichtleitung und nehmt euch die Zeit, die euch zusteht.</li>
+      <li>Während der Arbeit gilt <strong>Handyverbot</strong> – ausgenommen sind <strong>geschäftsbezogene Anrufe</strong>, z. B. wenn ihr mit Orhun telefoniert.</li>
+      <li>Von euch wird eine gewisse <strong>Flexibilität</strong> erwartet: Kundenandrang oder Wetterbedingungen können dazu führen, dass wir früher oder später Feierabend machen bzw. beginnen müssen. Bei festen Deadlines (z. B. Zugabfahrt) bitte vorher Bescheid geben.</li>
+      <li><strong>Nicht volljährige Mitarbeitende</strong> dürfen am Tag maximal <strong>8 Stunden</strong> und in der Woche maximal <strong>40 Stunden</strong> arbeiten, sowie maximal <strong>5 Tage pro Woche</strong>. Die Arbeitspläne wurden bereits entsprechend vorbereitet.</li>
+    </ul>
+
+    <h3>Hygiene</h3>
+    <p>Haltet euch an die <strong>allgemeinen Hygieneregeln</strong>, die ihr in der Schulung gelernt habt. Insbesondere:</p>
+    <ul>
+      <li><strong>Handschuhe wechseln</strong>, nachdem ihr Geld oder anderes verschmutztes Material angefasst habt.</li>
+      <li>Handschuhe ebenfalls wechseln nach <strong>Toilettengang, Rauchen</strong> o. Ä.</li>
+      <li>Zur <strong>Toilette geht ihr immer ohne Schürze</strong>.</li>
+    </ul>
+
+    <h3>Ehrlichkeit & Eigenverzehr (kein Schwarzgeld)</h3>
+    <p>Wir werden euch nicht verarschen! – und wir wollen von euch auch nicht verarscht werden. Deshalb gelten hier klare Regeln:</p>
+    <ul>
+      <li><strong>Alles, was vom Team verzehrt wird, muss dokumentiert werden.</strong> Nur so können wir gegenüber dem Finanzamt eine korrekte Kassenführung gewährleisten.</li>
+      <li><strong>Bei Bauch & Flamme:</strong> Eigenverzehr wird handschriftlich auf einem Zettel notiert – mit <strong>Datum, Name, Produkt</strong>, z. B.: <em>„18.07.2026, Orhun, 1x Bratwurst"</em>.</li>
+      <li><strong>Bei Bauch-Laden:</strong> Selbstverzehr wird direkt in die Kasse als <strong>„BL Team Gutschein"</strong> eingetragen.</li>
+      <li><strong>Bei Bauch-Laden</strong> ist es zusätzlich wichtig, vor Verkaufsstart die <strong>Schauteller</strong> vorzubereiten und draußen auf den Stehtisch zu stellen. Auch diese müssen in die Kasse als <strong>„BL Team Gutschein"</strong> eingetragen werden.</li>
+    </ul>
+
+    <h4>Kostenloses Essen & Mitarbeiterrabatte</h4>
+    <ul>
+      <li><strong>Jede*r Mitarbeitende darf 1 kostenlose Mahlzeit pro gearbeitetem Tag</strong> für den eigenen Verzehr nehmen. Das gilt nur für gearbeitete Tage und nur für Eigenverzehr.</li>
+      <li><strong>Jedes weitere Essen</strong> wird mit <strong>50 % Rabatt</strong> abgegeben.</li>
+      <li>Sowohl das kostenlose als auch das rabattierte Essen müssen <strong>korrekt dokumentiert</strong> werden.</li>
+      <li><strong>Mitarbeitende von anderen Ständen</strong> (z. B. der Bar) bekommen bei uns <strong>50 % Rabatt</strong> – die Anzahl muss notiert werden (Zettle bei Bauch & Flamme, Kassensystem bei Bauch-Laden).</li>
+      <li><strong>Insgesamt 3-4 Personen</strong> (z. B. der Gesamtveranstalter Johannes) dürfen bei uns <strong>immer kostenlos</strong> etwas abholen – auch das muss dokumentiert werden. Details zu diesen Personen werden vor Ort mitgeteilt.</li>
+      <li><strong>Jede*r unserer Mitarbeitenden</strong> erhält im Gegenzug <strong>50 % Rabatt an der Bar</strong>.</li>
+      <li><strong>Kaffee</strong> könnt ihr euch selbst bedienen. Am Ende wird pro Person eine <strong>Pauschale von ca. 15 €</strong> gesammelt und dem Kaffeeanbieter gegeben.</li>
+      <li><strong>Kostenloses Leitungswasser an der Bar</strong> – dafür bitte eure <strong>eigene Trinkflasche mitbringen</strong>.</li>
+    </ul>
+
+    <h2>1 · Dokumentenvorlage vor Arbeitsbeginn</h2>
+    <p>Jede*r Mitarbeitende ist verpflichtet, folgende Dokumente <strong>spätestens 1 Woche vor Arbeitsbeginn</strong> an <strong>Orhun Süzer</strong> zu übermitteln:</p>
+    <ul>
+      <li><strong>Hygienebelehrung</strong> (falls nicht vorhanden oder älter als 2 Jahre, online beantragbar)</li>
+      <li><strong>Unterschriebener Arbeitsvertrag</strong></li>
+      <li><strong>Kopie des Personalausweises</strong></li>
+      <li>Falls <strong>keine EU-Staatsbürgerschaft</strong> vorliegt: <strong>Kopie des Aufenthaltstitels sowie der Arbeitserlaubnis</strong></li>
+      <li>Falls die Tätigkeit als <strong>Werkstudent*in</strong> ausgeübt wird: <strong>Studienbescheinigung</strong>, die mit jedem Semester erneut vorzulegen ist</li>
+    </ul>
+
+    <h2>2 · Allgemeine Regeln</h2>
+    <ul>
+      <li><strong>Bevor du zur Arbeit losfährst</strong>, stelle sicher, dass du alle benötigten Materialien, auch kleinere Dinge wie Namensschilder, dabei hast.</li>
+      <li><strong>Pünktlichkeit</strong> ist für die reibungslose Zusammenarbeit sehr wichtig. Verspätungen sind nicht erlaubt. Sollte ein unerwartetes Ereignis eintreten, informiert sofort die WhatsApp-Gruppe, eure Schichtleitung oder Orhun.</li>
+      <li><strong>Hinweis:</strong> Aktuell gibt es in Stuttgart massive Streckensperrungen. Nehmt lieber eine frühere Verbindung, da der Verkehr insgesamt unvorhersehbar ist.</li>
+      <li><strong>Kunden- und Veranstalterrichtlinien</strong> dürfen unter keinen Umständen verletzt werden (z. B. Film- oder Rauchverbot bei einer Veranstaltung).</li>
+      <li><strong>Essen und Trinken im Food-Truck und in der Hütte ist verboten.</strong> Das gehört in die Pausenzeit und muss außerhalb des Trucks bzw. der Hütte stattfinden.</li>
+      <li><strong>Wenn ihr esst oder trinkt: keine Handschuhe! Wenn ihr im Truck oder in der Hütte arbeitet: mit Handschuhen!</strong></li>
+      <li>Deutsch ist unsere offizielle <strong>Arbeitssprache</strong> – das schafft Orientierung, Sicherheit und ein faires Miteinander.</li>
+      <li><strong>Open Book Policy:</strong> Jeder Kunde darf jederzeit die Produkte und auch das Wagen-/Hütteninnere anschauen.</li>
+      <li><strong>Lebensmittel niemals direkt auf den Boden stellen.</strong> Haltet sie mindestens 10 cm über dem Boden (z. B. eine Bäcker-Kiste darunterstellen).</li>
+      <li><strong>Trinkgeld gehört ausschließlich den Mitarbeitenden.</strong> Der Betreiber/Inhaber Orhun nimmt kein Trinkgeld an, auch wenn er im Verkauf/Truck mitarbeitet.</li>
+      <li>Ab <strong>6 Stunden Arbeit</strong> muss mindestens <strong>30 Minuten Pause</strong>, ab <strong>9 Stunden</strong> mindestens <strong>45 Minuten Pause</strong> genommen und eingetragen werden.</li>
+      <li><strong>Für Mitarbeitende unter 18 Jahren</strong> gelten zusätzlich die gesetzlichen Vorgaben des Jugendarbeitsschutzgesetzes: keine Arbeit nach 22:00 Uhr, maximal 40 Stunden pro Woche, maximal 5 Tage pro Woche. Spätestens nach <strong>4,5 Stunden</strong> muss die erste Pause genommen werden. Bei einer Arbeitsdauer bis 6 Stunden ist eine Pause von 30 Minuten Pflicht, ab 6 Stunden eine Pause von 1 Stunde.</li>
+    </ul>
+
+    <h2>3 · Alkohol- und Drogenrichtlinie</h2>
+    <p><strong>Für alle Mitarbeitenden gilt eine absolute Grenze von 0,0 Promille.</strong></p>
+    <p>Konsum und Besitz illegaler Drogen (einschließlich Cannabis, auch bei Legalisierung) ist bei dienstlichen Veranstaltungen und während der Arbeitszeit <strong>streng untersagt</strong>.</p>
+
+    <h2>4 · Arbeitsabläufe</h2>
+    <h3>4.1 · Verantwortlichkeiten</h3>
+    <ul>
+      <li><strong>Nathan Tekoutsap</strong> ist Schichtleiter für <strong>Bauch & Flamme</strong>.</li>
+      <li><strong>Ayse Bulut</strong> ist Schichtleiterin für <strong>Bauch-Laden</strong>.</li>
+      <li>Sollte die zuständige Schichtleitung nicht erreichbar sein, kann <strong>Orhun</strong> als hauptverantwortliche Ansprechperson kontaktiert werden.</li>
+      <li><strong>Orhun</strong> ist als Betriebsinhaber und -betreiber während der gesamten Veranstaltungszeit vor Ort – mal bei Bauch & Flamme, mal bei Bauch-Laden – und unterstützt, wo er gebraucht wird. Bei Fragen, Sorgen oder Problemen ist er jederzeit erreichbar.</li>
+    </ul>
+    <h4>Nach der Arbeit</h4>
+    <ul>
+      <li><strong>Reflexion nach dem Einsatz:</strong> Was lief gut? Bitte teilt eure Einschätzung mit Orhun oder den Schichtleitungen.</li>
+      <li>Nach jeder Veranstaltung muss das Bestandsaufnahmeprotokoll für das Material im Food-Truck und in der Hütte ausgefüllt werden.</li>
+      <li><strong>Arbeitsstunden müssen täglich</strong> eingetragen bzw. aktualisiert werden.</li>
+    </ul>
+
+    <h3>4.2 · Bauch-Laden – Kundenkommunikation</h3>
+    <p>Unsere Bauch-Laden-Kund*innen legen bewussten Wert auf hochwertige Produkte ohne Zusatzstoffe sowie auf Nachhaltigkeit und Regionalität.</p>
+
+    <h4>Umgang mit Beschwerden</h4>
+    <blockquote>„Vielen Dank für die Rückmeldung. Das würde ich gerne mitnehmen und intern besprechen. Darf ich Ihnen, um es wiedergutzumachen, eine neue Portion anbieten oder Ihr Geld zurückzahlen?"</blockquote>
+
+    <h4>Fragen zur Herkunft und Küche</h4>
+    <blockquote>„Unser Angebot lässt sich nicht klar einer bestimmten Küche zuordnen – es handelt sich um Fusion-Food. Unsere Teigtaschen sind zum Beispiel typisch anatolisch, werden in Anatolien jedoch niemals mit Ajvar serviert, das eigentlich aus den Balkanländern stammt. Unsere Fladenbrote sind komplett unsere eigene Kreation."</blockquote>
+
+    <h4>Umgang mit ausverkauften Produkten</h4>
+    <blockquote>„Wir haben leider keinen Ajvar mehr, darf ich Ihnen stattdessen unser hausgemachtes, leckeres Hummus anbieten?" (alternativ: Tzatziki, Joghurt oder was gerade übrig ist)</blockquote>
+
+    <h4>Fragen zu Zutaten</h4>
+    <blockquote>„Unsere Oliven sind echte Kalamata-Oliven – die einzigen ungeschwärzten Oliven auf dem Markt. Normalerweise werden Oliven durch Oxidation geschwärzt, unsere jedoch nicht!"</blockquote>
+
+    <h4>Fragen zu Ernährungsbedürfnissen</h4>
+    <blockquote>„Ja, natürlich. Sie können zum Beispiel unsere Bowl mit hausgemachtem Hummus nehmen. Statt Brot kann ich Ihnen Reis anbieten – dann ist es glutenfrei."</blockquote>
+    <blockquote>„Ja, natürlich. Gözleme mit Kartoffelfüllung, unsere Cigköfte oder unsere Bowl mit hausgemachtem Hummus ohne Tzatziki sind ebenfalls vegan."</blockquote>
+
+    <h4>Fragen zu Ajvar</h4>
+    <blockquote>„Ajvar ist eine würzige Paste aus gerösteten Paprika, die ursprünglich aus den Balkanländern stammt. Unser Ajvar ist überhaupt nicht scharf, sondern mild und aromatisch im Geschmack."</blockquote>
+
+    <h4>Fragen zu Anpassungen am Gericht</h4>
+    <blockquote>„Leider ist die leckere getrocknete Tomatenpaste bereits ins Brot eingestrichen. Deswegen ist es leider nicht möglich, ihn ohne Tomaten zuzubereiten."</blockquote>
+
+    <h4>Fragen zu einzelnen Gerichten</h4>
+    <blockquote>„Unser Bauch-Laden's Klassiker ist ein Fladenbrot, belegt mit Gouda- und Mozzarella-Käse, getrockneten Tomaten und extra nativem Olivenöl. Es wird getoastet und anschließend mit Salatblättern und Ajvar serviert."</blockquote>
+    <blockquote>„Unsere frische Hummus-Bowl besteht aus hausgemachtem Hummus, serviert mit geröstetem Fladenbrot und duftendem Reis."</blockquote>
+
+    <h4>Fragen zu Allergenen und Zusatzstoffen</h4>
+    <blockquote>„Die Allergen- und Zusatzstoffliste hängt direkt an unserem Wagen aus. Wir verzichten bewusst auf Aromen, Geschmacksverstärker und Konservierungsmittel."</blockquote>
+
+    <h4>Zugangsdaten & Dokumentation (Strohländle)</h4>
+    <p>Die Zugangsdaten für das Bauch-Laden-Tablet sind zusätzlich ausgedruckt im Fahrzeug hinterlegt, ebenso wie der QR-Code.</p>
+
+    <h3>4.3 · Bauch & Flamme – Kundenkommunikation</h3>
+    <p><strong>Bauch & Flamme-Kund*innen</strong> erwarten vor allem eine zügige und zuverlässige Lieferung ihrer Bestellung.</p>
+    <blockquote>„Unsere Wurst kommt von einem regionalen Metzger – Aufzucht und Schlachtung erfolgen regional."</blockquote>
+    <blockquote>„Unser Brot kommt von einem regionalen Bäcker, der uns sagt: ‚Bei mir ist alles ohne Zusatzstoffe und aus regionalen Rohstoffen – wirklich regional, aus der direkten Nachbarschaft.'"</blockquote>
+    <p><strong>Tony</strong> betreut die Pommes-/Wedges-Station, <strong>Nathan</strong> den Grill.</p>
+
+    <div style="text-align:center; margin-top:40px;">
+      <button class="btn" onclick="showScreen('screen-quiz-intro')">Weiter zum Quiz →</button>
+    </div>
+  </section>
+
+  <!-- SCREEN 2b: QUIZ INTRO -->
+  <section class="screen" id="screen-quiz-intro">
+    <div class="eyebrow">Mini-Quiz</div>
+    <h1>Bereit für 50 Fragen?</h1>
+    <p>Du kannst das Quiz so oft wiederholen, wie du möchtest. Am Ende trägst du kurz deinen Namen ein, damit Orhun sehen kann, wer das Training abgeschlossen hat.</p>
+    <button class="btn" onclick="startQuiz()">Quiz starten →</button>
+    <button class="btn secondary" onclick="showScreen('screen-content')">← Zurück zum Inhalt</button>
+  </section>
+
+  <!-- SCREEN 3: QUIZ -->
+  <section class="screen" id="screen-quiz">
+    <div class="progress" id="quiz-progress">Versuch <span id="attempt-num">1</span></div>
+    <h1>Mini-Quiz</h1>
+    <div id="quiz-questions"></div>
+    <button class="btn" onclick="evaluateQuiz()">Auswerten →</button>
+  </section>
+
+  <!-- SCREEN 4: NAME -->
+  <section class="screen" id="screen-name">
+    <div class="eyebrow">Fast geschafft</div>
+    <h1>Wie heißt du?</h1>
+    <p>Trag deinen Namen ein, bevor wir dir dein Ergebnis zeigen.</p>
+    <div class="card">
+      <label class="field">Vorname</label>
+      <input type="text" id="input-vorname" placeholder="Vorname">
+      <label class="field">Nachname</label>
+      <input type="text" id="input-nachname" placeholder="Nachname">
+      <button class="btn" onclick="submitAndShowResult()">Ergebnis anzeigen →</button>
+    </div>
+  </section>
+
+  <!-- SCREEN 5: RESULT -->
+  <section class="screen" id="screen-result">
+    <div class="eyebrow">Ergebnis</div>
+    <h1 id="result-name">Gut gemacht!</h1>
+    <div class="card" style="text-align:center;">
+      <div class="score-big" id="score-display">0 / 15</div>
+      <p class="score-sub" id="score-feedback"></p>
+    </div>
+    <div style="text-align:center; margin-top:24px;">
+      <button class="btn secondary" onclick="showScreen('screen-content')">← Zurück zum Inhalt</button>
+      <button class="btn" onclick="retryQuiz()">Quiz erneut versuchen ↻</button>
+    </div>
+  </section>
+
+  <!-- Hidden Google Form submission -->
+  <iframe name="hidden_iframe" id="hidden_iframe" style="display:none;"></iframe>
+  <form id="gform"
+        action="https://docs.google.com/forms/d/e/1FAIpQLSdrcy1NWw_dBzXI1ssR-bw3iKJWOJF1EeAXLiPCzkbKD5jwLA/formResponse"
+        method="POST" target="hidden_iframe" style="display:none;">
+    <input type="text" name="entry.373770154" id="entry-vorname">
+    <input type="text" name="entry.666155632" id="entry-nachname">
+    <input type="text" name="entry.1580034090" id="entry-score">
+    <input type="text" name="entry.2012460466" id="entry-versuch">
+    <input type="text" name="entry.2055003647" id="entry-antworten">
+  </form>
+
+</div>
+
+<script>
+  const questions = [
+    { q: "Wofür steht Bauch-Laden laut unserem Werte-Manifest, mehr als nur für gutes Essen?", options: ["Nur für schnelles und günstiges Essen unterwegs", "Für bewusste Entscheidungen – für unsere Umwelt, unsere Gäste und unser Team", "Ausschließlich für traditionelle anatolische Küche ohne Fusion-Elemente", "Für ein reines Franchise-Konzept ohne eigene Handschrift"], correct: 1 },
+    { q: "Was bedeutet unser Wert 'Transparenz & Offenheit' konkret im Arbeitsalltag?", options: ["Kund*innen dürfen jederzeit in den Food-Truck bzw. in unser Handwerk und auf die Zutatenliste schauen", "Rezepte werden nur intern besprochen und niemals offengelegt", "Nur Stammkund*innen dürfen Fragen zu Zutaten stellen", "Offenheit bezieht sich nur auf die Buchhaltung, nicht auf die Küche"], correct: 0 },
+    { q: "Wie handeln wir laut unserem Wert 'Qualität & Handwerk'?", options: ["Wir kaufen günstige Fertigprodukte, um Zeit zu sparen", "Wir bereiten unsere Speisen frisch und mit Sorgfalt zu – der Geschmack kommt von echten Zutaten, nicht von Zusatzstoffen", "Wir verwenden Aromen und Geschmacksverstärker, um Konsistenz zu sichern", "Qualität ist zweitrangig, Hauptsache schnelle Zubereitung"], correct: 1 },
+    { q: "Was gehört laut unserem Wert 'Respekt & Fairness' zu unserem Miteinander?", options: ["Nur Kund*innen werden respektvoll behandelt, Kolleg*innen weniger wichtig", "Ob Kunde, Kollege oder Lieferant – wir begegnen allen mit Respekt und tragen Verantwortung gemeinsam", "Verantwortung trägt ausschließlich die Geschäftsführung allein", "Fairness gilt nur gegenüber zahlenden Gästen"], correct: 1 },
+    { q: "Wie beschreiben wir unseren Wert 'Teamgeist & Zusammenarbeit'?", options: ["Jede*r arbeitet für sich allein, ohne viel Austausch", "Wir arbeiten miteinander statt nebeneinander – mit Kommunikation auf Augenhöhe und einer Prise Humor", "Teamarbeit ist nur bei Bauch & Flamme wichtig, bei Bauch-Laden nicht", "Zusammenarbeit bedeutet, dass die Schichtleitung alles allein entscheidet"], correct: 1 },
+    { q: "Was ist unser Ziel laut dem Wert 'Freude & Gastfreundschaft'?", options: ["Gäste sollen einfach nur schnell satt werden", "Wer zu uns kommt, soll sich wohlfühlen und nicht nur satt werden – wir schaffen Begegnungen, die in Erinnerung bleiben", "Freundlichkeit ist optional, solange das Essen stimmt", "Gastfreundschaft bezieht sich nur auf Stammkund*innen"], correct: 1 },
+    { q: "Wofür übernehmen wir laut unserem Wert 'Verantwortung & Haltung' Verantwortung?", options: ["Nur für den finanziellen Erfolg des Unternehmens", "Für Hygiene, Sicherheit und die Wirkung unseres Handelns – wir wissen, dass wir mit unserem Tun einen Unterschied machen können", "Verantwortung liegt allein bei Orhun, nicht beim Team", "Verantwortung betrifft nur die Fahrzeugnutzung"], correct: 1 },
+    { q: "Wie ist unsere Grundhaltung zur Arbeit formuliert?", options: ["Wir wollen einfach nur irgendwie über die Runden kommen", "Wir wollen hier sehr gut arbeiten, sehr gut liefern und unser wohlverdientes Geld genießen", "Hauptsache, die Kund*innen merken nichts von Problemen", "Arbeit ist Nebensache, solange der Umsatz stimmt"], correct: 1 },
+    { q: "Seit wie vielen Jahren gibt es Bauch-Laden bereits?", options: ["Seit weniger als einem Jahr", "Seit über 7 Jahren", "Seit über 20 Jahren", "Das Gründungsjahr ist nicht bekannt"], correct: 1 },
+    { q: "Zum wievielten Mal sind wir (Bauch-Laden und Bauch & Flamme) beim Strohländle-Festival dabei?", options: ["Es ist bereits unser 5. Jahr dort", "Es ist unser allererstes Jahr – deshalb wollen wir einen besonders guten Eindruck hinterlassen", "Wir sind seit der ersten Ausgabe 2012 jedes Jahr dabei", "Wir waren früher dabei, pausieren dieses Jahr aber"], correct: 1 },
+
+    { q: "Was erwarten wir von euch bezüglich Lernen und Feedback?", options: ["Nur eure bisherige Erfahrung zählt, Neues lernen ist nicht nötig", "Lernoffenheit und Feedbackoffenheit – es gibt viele neue Dinge zu lernen, gleichzeitig schätzen wir eure Erfahrung und offene Ideen sehr", "Ihr sollt nur Feedback geben, aber keines annehmen", "Feedback ist unerwünscht, Anweisungen werden nur befolgt"], correct: 1 },
+
+    { q: "Was passiert, wenn ihr während der Arbeit etwas von unserem Essen probieren möchtet?", options: ["Ihr esst einfach vor den Kund*innen mit", "Vor Kund*innen wird nicht gegessen – dreht euch kurz um und probiert unauffällig, für die richtige Pause geht ihr nach draußen", "Probieren ist grundsätzlich verboten, auch hinter der Theke", "Das ist nur der Schichtleitung erlaubt"], correct: 1 },
+    { q: "Wie ist die Pausenregelung während der Arbeitszeit?", options: ["Pausen sind freiwillig und müssen nicht genommen werden", "Ab 6 Stunden Arbeitszeit mindestens 30 Minuten Pause, ab 9 Stunden mindestens 45 Minuten Pause", "Es gibt grundsätzlich nur eine 10-Minuten-Pause pro Schicht", "Pausen dürfen nur am Ende der Schicht genommen werden"], correct: 1 },
+    { q: "Wie ist die Handynutzung während der Arbeit geregelt?", options: ["Handys dürfen jederzeit frei genutzt werden", "Es gilt Handyverbot, ausgenommen sind geschäftsbezogene Anrufe, z. B. mit Orhun", "Handynutzung ist nur in der Mittagspause erlaubt", "Nur die Schichtleitung darf ihr Handy benutzen"], correct: 1 },
+    { q: "Welche Flexibilität wird von euch während der Veranstaltung erwartet?", options: ["Ihr müsst euch strikt an die exakte geplante Uhrzeit halten, auch bei Änderungen", "Kundenandrang oder Wetter können dazu führen, dass wir früher oder später beginnen bzw. aufhören – bei festen Deadlines bitte vorher Bescheid geben", "Flexibilität wird nicht erwartet, der Dienstplan ist unveränderlich", "Nur Vollzeitkräfte müssen flexibel sein"], correct: 1 },
+    { q: "Welche besonderen Arbeitszeit-Regeln gelten für minderjährige Mitarbeitende?", options: ["Für sie gelten dieselben Regeln wie für Erwachsene, keine Unterschiede", "Maximal 8 Stunden pro Tag, maximal 40 Stunden und maximal 5 Tage pro Woche", "Minderjährige dürfen unbegrenzt viele Stunden arbeiten, solange die Eltern zustimmen", "Minderjährige dürfen maximal 2 Stunden am Tag arbeiten"], correct: 1 },
+    { q: "Wie verlasst ihr korrekt kurz die Toilette während der Arbeit?", options: ["Mit Schürze und Handschuhen, ohne es jemandem zu sagen", "Ohne Schürze, ohne Handschuhe – und ihr kommuniziert es dem Rest des Teams, damit eure Station abgedeckt ist", "Ihr müsst dafür die Schicht offiziell beenden", "Die Toilette darf während der Arbeitszeit gar nicht aufgesucht werden"], correct: 1 },
+
+    { q: "Wann müsst ihr während der Arbeit die Handschuhe wechseln?", options: ["Nur einmal am Anfang der Schicht", "Nach Geldkontakt, nach dem Toilettengang, nach dem Rauchen und generell nach Kontakt mit verschmutztem Material", "Handschuhe müssen nie gewechselt werden, solange sie nicht sichtbar dreckig sind", "Nur wenn ein Kunde danach fragt"], correct: 1 },
+    { q: "Was gilt für Handschuhe, wenn ihr selbst esst oder trinkt?", options: ["Handschuhe bleiben immer an, auch beim Essen", "Beim Essen oder Trinken werden keine Handschuhe getragen; beim Arbeiten im Truck/in der Hütte dagegen schon", "Handschuhe sind beim Essen Pflicht, beim Arbeiten optional", "Das ist jeder Person selbst überlassen"], correct: 1 },
+    { q: "An wen wendet ihr euch bei Fragen oder Problemen während des Einsatzes?", options: ["Zuerst an eure Schichtleitung, und falls diese keine Antwort hat oder es nicht lösen kann, dann an Orhun", "Direkt an die Kund*innen, die meist selbst Bescheid wissen", "An niemanden, Probleme sollen selbstständig gelöst werden", "Nur schriftlich per E-Mail, niemals telefonisch oder persönlich"], correct: 0 },
+
+    { q: "Warum muss jeder Eigenverzehr dokumentiert werden?", options: ["Nur aus Neugier der Geschäftsführung", "Damit wir gegenüber dem Finanzamt eine korrekte Kassenführung gewährleisten können", "Dokumentation ist reine Formsache ohne echten Zweck", "Nur bei teuren Produkten ist eine Dokumentation nötig"], correct: 1 },
+    { q: "Wie wird Eigenverzehr bei Bauch & Flamme dokumentiert?", options: ["Gar nicht, es wird auf Vertrauen gesetzt", "Handschriftlich auf einem Zettel mit Datum, Name und Produkt, z. B. '18.07.2026, Orhun, 1x Bratwurst'", "Nur mündlich der Schichtleitung mitteilen", "Per WhatsApp-Nachricht an die gesamte Gruppe"], correct: 1 },
+    { q: "Wie wird Selbstverzehr bei Bauch-Laden dokumentiert?", options: ["Direkt in der Kasse als 'BL Team Gutschein' eintragen", "Auf einem separaten Zettel, der wöchentlich gesammelt wird", "Gar nicht, da es bei Bauch-Laden keine Regelung dafür gibt", "Nur am Ende der Saison einmalig zusammenfassen"], correct: 0 },
+    { q: "Was passiert bei Bauch-Laden zusätzlich vor Verkaufsstart mit den Schautellern?", options: ["Sie werden einfach im Truck versteckt und nicht erfasst", "Sie werden vorbereitet und auf den Stehtisch gestellt, und müssen ebenfalls als 'BL Team Gutschein' in die Kasse eingetragen werden", "Schauteller sind komplett kostenlos und müssen nicht dokumentiert werden", "Sie zählen als Werbung und werden separat abgerechnet"], correct: 1 },
+    { q: "Wie viele kostenlose Mahlzeiten darf ein/e Mitarbeitende/r pro gearbeitetem Tag für den eigenen Verzehr nehmen?", options: ["Beliebig viele, solange es dokumentiert wird", "Eine kostenlose Mahlzeit pro gearbeitetem Tag für den Eigenverzehr; jedes weitere Essen wird mit 50% rabattiert", "Grundsätzlich gar keine, alles muss voll bezahlt werden", "Zwei kostenlose Mahlzeiten, unabhängig davon ob gearbeitet wurde"], correct: 1 },
+    { q: "Muss auch das kostenlose bzw. das 50% rabattierte Essen dokumentiert werden?", options: ["Nein, das gilt nur für zahlende Kund*innen", "Ja, sowohl das kostenlose als auch das 50% rabattierte Essen müssen korrekt dokumentiert werden", "Nur das rabattierte Essen muss dokumentiert werden, das kostenlose nicht", "Dokumentation ist hier freiwillig"], correct: 1 },
+    { q: "Welchen Rabatt bekommen Mitarbeitende von anderen Ständen (z. B. der Bar) bei uns?", options: ["Sie bezahlen den vollen Preis wie normale Gäste", "50% Rabatt, wobei die Anzahl des rabattierten Konsums notiert werden muss (z. B. über Zettle bei Bauch & Flamme oder im Kassensystem bei Bauch-Laden)", "Sie erhalten alles kostenlos, ohne Dokumentation", "Rabatte für andere Stände gibt es grundsätzlich nicht"], correct: 1 },
+    { q: "Warum ist die korrekte Dokumentation von Eigenverzehr und Rabatten so wichtig?", options: ["Damit am Ende der Saison eine kleine Party organisiert werden kann", "Damit die Kassenführung gegenüber dem Finanzamt stimmt und nichts als Schwarzgeld gilt", "Es ist reine Förmlichkeit ohne echten Hintergrund", "Nur um die Beliebtheit einzelner Gerichte zu messen"], correct: 1 },
+
+    { q: "Was gilt für Essen und Trinken im Food-Truck bzw. in der Hütte?", options: ["Es ist grundsätzlich erlaubt, auch vor Kund*innen", "Es ist verboten – das gehört in die Pausenzeit und muss außerhalb des Trucks bzw. der Hütte stattfinden", "Nur Trinken ist erlaubt, Essen nicht", "Es ist nur nach 20 Uhr erlaubt"], correct: 1 },
+    { q: "Wem gehört das Trinkgeld, das Kund*innen geben?", options: ["Es wird zwischen Team und Geschäftsführung geteilt", "Es gehört ausschließlich den Mitarbeitenden – Orhun nimmt kein Trinkgeld an, auch wenn er im Verkauf/Truck mitarbeitet", "Es fließt automatisch in die Firmenkasse", "Es wird am Ende der Saison gleichmäßig unter allen Mitarbeitenden aller Standorte verteilt"], correct: 1 },
+    { q: "Was solltet ihr tun, wenn ein unerwartetes Ereignis (z. B. eine Verspätung) eintritt?", options: ["Einfach abwarten und nichts sagen", "Sofort die WhatsApp-Gruppe, eure Schichtleitung oder Orhun informieren", "Erst nach der Schicht Bescheid geben", "Eine E-Mail an DATEV schreiben"], correct: 1 },
+    { q: "Was ist aktuell in Stuttgart zu beachten, das die Anfahrt beeinflussen kann?", options: ["Es gibt derzeit keine besonderen Einschränkungen", "Es gibt massive Streckensperrungen – daher lieber eine frühere Verbindung nehmen, da der Verkehr unvorhersehbar ist", "Alle Straßen sind gesperrt, Anreise ist nur zu Fuß möglich", "Es betrifft nur Autofahrer*innen, nicht den ÖPNV"], correct: 1 },
+    { q: "Was besagt unsere 'Open Book Policy'?", options: ["Kund*innen dürfen jederzeit die Produkte und auch das Wagen-/Hütteninnere anschauen", "Nur Behörden dürfen unsere Rezepte einsehen", "Kund*innen dürfen nur nach vorheriger Anmeldung schauen", "Diese Policy betrifft nur die Buchhaltung"], correct: 0 },
+    { q: "Ab wann müssen Mitarbeitende unter 18 Jahren ihre erste Pause nehmen?", options: ["Erst nach 6 Stunden, wie bei Erwachsenen auch", "Spätestens nach 4,5 Stunden Arbeit", "Erst nach 8 Stunden", "Pausenregelungen gelten für Minderjährige nicht"], correct: 1 },
+
+    { q: "Welche Promillegrenze gilt für alle Mitarbeitenden während der Strohländle-Veranstaltung?", options: ["0,5 Promille für alle", "0,0 Promille für alle Mitarbeitenden, unabhängig davon ob sie fahren oder nicht", "0,3 Promille für Fahrer*innen, unbegrenzt für alle anderen", "Es gibt keine festgelegte Grenze"], correct: 1 },
+    { q: "Wie ist der Umgang mit Cannabis bei der Arbeit geregelt?", options: ["Cannabis ist seit der Legalisierung bei der Arbeit erlaubt", "Konsum und Besitz sind bei dienstlichen Veranstaltungen und während der Arbeitszeit weiterhin streng untersagt, auch nach der Legalisierung", "Cannabis ist nur außerhalb der Öffnungszeiten erlaubt", "Es gibt keine Regelung dazu"], correct: 1 },
+
+    { q: "Wer ist Schichtleiterin für Bauch-Laden?", options: ["Ann-Cathrin", "Ayse Bulut", "Nathan Tekoutsap", "Petra"], correct: 1 },
+    { q: "Wer ist Schichtleiter für Bauch & Flamme?", options: ["Tony", "Nathan Tekoutsap", "Orhun", "Ayse Bulut"], correct: 1 },
+    { q: "Wie ist Orhun während der Strohländle-Veranstaltung erreichbar?", options: ["Er ist nur per E-Mail erreichbar und selten vor Ort", "Er ist während der gesamten Veranstaltungszeit vor Ort – mal bei Bauch & Flamme, mal bei Bauch-Laden – und jederzeit erreichbar", "Er ist nur an den Wochenenden erreichbar", "Er delegiert alles komplett an die Schichtleitungen"], correct: 1 },
+    { q: "Was solltet ihr nach jedem Einsatz mit Orhun oder den Schichtleitungen teilen?", options: ["Nichts, der Einsatz ist mit Feierabend beendet", "Eine kurze Reflexion – was lief gut, was habt ihr gut gemacht", "Nur Beschwerden, positives Feedback ist nicht nötig", "Reflexion ist nur am Ende der gesamten Saison einmal nötig"], correct: 1 },
+    { q: "Wie oft müssen die Arbeitsstunden eingetragen werden?", options: ["Einmal am Ende der gesamten Veranstaltung", "Täglich", "Einmal pro Woche", "Nur bei Überstunden"], correct: 1 },
+
+    { q: "Bei Bauch-Laden fragt ein Kunde, ob unser Ajvar scharf ist. Was antwortet ihr?", options: ["Ja, es ist sehr scharf und nur für Mutige geeignet", "Nein – unser Ajvar ist überhaupt nicht scharf, sondern eine würzige Paste aus gerösteten Paprika, mild und aromatisch im Geschmack", "Das kommt auf die Tagesform des Kochs an", "Ajvar gibt es bei uns gar nicht"], correct: 1 },
+    { q: "Bei Bauch-Laden wünscht sich eine Kundin glutenfreies Essen. Was könnt ihr ihr anbieten?", options: ["Bei uns gibt es grundsätzlich nichts Glutenfreies", "Zum Beispiel unsere Bowl mit hausgemachtem Hummus – statt Brot könnt ihr Reis anbieten, dann ist es glutenfrei", "Nur das Fladenbrot ohne Belag", "Die Gözleme, da sie kein Gluten enthält"], correct: 1 },
+    { q: "Bei Bauch-Laden fragt ein Kunde nach veganen Optionen. Was könnt ihr anbieten?", options: ["Bei uns gibt es überhaupt nichts Veganes", "Zum Beispiel Gözleme mit Kartoffelfüllung, die Cigköfte oder die Hummus-Bowl ohne Tzatziki", "Nur den Klassiker mit extra Käse", "Nur die Winter-Gerichte sind vegan"], correct: 1 },
+    { q: "Bei Bauch-Laden beschwert sich ein Kunde, dass zu wenig Käse auf dem Fladenbrot war. Wie reagiert ihr?", options: ["Ihr ignoriert die Beschwerde, das ist Geschmackssache", "Ihr bedankt euch für die Rückmeldung und bietet an, eine neue Portion zu machen oder das Geld zurückzuzahlen", "Ihr erklärt, dass mehr Käse nicht möglich ist und beendet das Gespräch", "Ihr gebt dem Kunden einen Rabattgutschein für den nächsten Besuch, ohne das aktuelle Problem zu lösen"], correct: 1 },
+    { q: "Bei Bauch-Laden fragt ein Kunde, zu welcher Küche unser Essen gehört. Was antwortet ihr?", options: ["Rein türkische Küche, traditionell und unverändert", "Unser Angebot lässt sich nicht klar einer Küche zuordnen – es ist Fusion-Food, z. B. sind unsere Teigtaschen anatolisch inspiriert, werden aber mit balkanischem Ajvar serviert", "Rein deutsche Küche mit internationalen Namen", "Ausschließlich levantinische Küche"], correct: 1 },
+    { q: "Bei Bauch-Laden ist der Ajvar gerade ausverkauft. Was könnt ihr stattdessen anbieten?", options: ["Gar nichts, der Kunde muss auf den nächsten Tag warten", "Zum Beispiel unser hausgemachtes Hummus, Tzatziki, Joghurt oder was gerade übrig ist", "Nur Ketchup als Ersatz", "Ihr sagt dem Kunden, er solle wo anders hingehen"], correct: 1 },
+    { q: "Bei Bauch-Laden fragt ein Kunde nach der Herkunft der Oliven. Was antwortet ihr?", options: ["Sie kommen aus der Dose vom Discounter", "Es sind echte Kalamata-Oliven – und die einzigen ungeschwärzten Oliven auf dem Markt, da normalerweise Oliven durch Oxidation geschwärzt werden", "Die Herkunft ist unbekannt", "Sie stammen aus lokalem Anbau in Stuttgart"], correct: 1 },
+
+    { q: "Bei Bauch & Flamme fragt ein Kunde, woher die Wurst kommt. Was antwortet ihr?", options: ["Sie kommt von einem regionalen Metzger, bei dem Aufzucht und Schlachtung regional erfolgen", "Die Herkunft wird nicht kommuniziert", "Sie kommt aus dem Großhandel ohne bekannte Herkunft", "Sie wird importiert, da es keine regionalen Anbieter gibt"], correct: 0 },
+    { q: "Wer betreut bei Bauch & Flamme hauptsächlich die Pommes- und Wedges-Station bzw. den Grill?", options: ["Ayse betreut beides", "Tony betreut die Pommes-/Wedges-Station, Nathan betreut den Grill", "Orhun betreut immer beide Stationen persönlich", "Die Stationen wechseln täglich zufällig"], correct: 1 }
+  ];
+
+
+  let attemptCount = 1;
+  let userAnswers = new Array(questions.length).fill(null);
+  let lastScore = 0;
+  let lastAnswerString = '';
+
+  function showScreen(id) {
+    document.querySelectorAll('.screen').forEach(s => s.classList.remove('active'));
+    document.getElementById(id).classList.add('active');
+    window.scrollTo(0, 0);
+  }
+
+  function startQuiz() {
+    renderQuiz();
+    document.getElementById('attempt-num').textContent = attemptCount;
+    showScreen('screen-quiz');
+  }
+
+  function renderQuiz() {
+    userAnswers = new Array(questions.length).fill(null);
+    const container = document.getElementById('quiz-questions');
+    container.innerHTML = '';
+    questions.forEach((item, qi) => {
+      const div = document.createElement('div');
+      div.className = 'question';
+      let optionsHtml = '';
+      item.options.forEach((opt, oi) => {
+        optionsHtml += `<label class="option">
+          <input type="radio" name="q${qi}" value="${oi}" onchange="setAnswer(${qi}, ${oi})"> ${opt}
+        </label>`;
+      });
+      div.innerHTML = `<p class="qtext">${qi + 1}. ${item.q}</p>${optionsHtml}`;
+      container.appendChild(div);
+    });
+  }
+
+  function setAnswer(qi, oi) {
+    userAnswers[qi] = oi;
+  }
+
+  function evaluateQuiz() {
+    let score = 0;
+    let answerBits = '';
+    questions.forEach((item, qi) => {
+      if (userAnswers[qi] === null) {
+        answerBits += '-';
+      } else {
+        const isCorrect = userAnswers[qi] === item.correct;
+        if (isCorrect) score++;
+        answerBits += isCorrect ? '1' : '0';
+      }
+    });
+    lastScore = score;
+    lastAnswerString = answerBits;
+    showScreen('screen-name');
+  }
+
+  function submitAndShowResult() {
+    const vorname = document.getElementById('input-vorname').value.trim();
+    const nachname = document.getElementById('input-nachname').value.trim();
+    if (!vorname || !nachname) {
+      alert('Bitte Vor- und Nachname eintragen.');
+      return;
+    }
+
+    // An Google Form senden (Ergebnisse landen in Google Sheet)
+    document.getElementById('entry-vorname').value = vorname;
+    document.getElementById('entry-nachname').value = nachname;
+    document.getElementById('entry-score').value = lastScore + ' / ' + questions.length;
+    document.getElementById('entry-versuch').value = attemptCount;
+    document.getElementById('entry-antworten').value = lastAnswerString;
+    document.getElementById('gform').submit();
+
+    document.getElementById('result-name').textContent = 'Gut gemacht, ' + vorname + '!';
+    document.getElementById('score-display').textContent = lastScore + ' / ' + questions.length;
+
+    let feedback = '';
+    if (lastScore === questions.length) feedback = 'Perfekt! Du kennst den Guide auswendig. 🎉';
+    else if (lastScore >= 12) feedback = 'Sehr gut! Nur noch ein paar Details auffrischen.';
+    else if (lastScore >= 8) feedback = 'Solide Basis – schau nochmal in den Guide rein.';
+    else feedback = 'Kein Problem – geh nochmal zurück zum Inhalt und probier es erneut.';
+    document.getElementById('score-feedback').textContent = feedback;
+
+    showScreen('screen-result');
+  }
+
+  function retryQuiz() {
+    attemptCount++;
+    startQuiz();
+  }
+</script>
+</body>
+</html>
