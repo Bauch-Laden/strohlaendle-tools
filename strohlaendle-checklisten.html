@@ -114,6 +114,7 @@
 
   <!-- BRAND CHOICE -->
   <section class="screen active" id="screen-brand-choice">
+    <a class="back-link" href="index.html" style="display:block;">← Zur Startseite</a>
     <div class="eyebrow">Checklisten</div>
     <h1>Für welches Konzept?</h1>
     <div class="brand-choice-card bl" onclick="chooseBrand('bl')">🧡 Bauch-Laden</div>
@@ -122,6 +123,7 @@
 
   <!-- MENU -->
   <section class="screen" id="screen-menu">
+    <a class="back-link" href="index.html" style="display:block;">← Zur Startseite</a>
     <span class="back-link" onclick="goToBrandChoice()">← Konzept wechseln</span>
     <div class="eyebrow" id="menu-eyebrow">Bauch-Laden</div>
     <span class="brand-tag" id="menu-brand-tag"></span>
@@ -145,6 +147,7 @@
 
   <!-- CHECKLIST SCREEN (abhakbar: Aufbau / Abschluss) -->
   <section class="screen" id="screen-checklist">
+    <a class="back-link" href="index.html" style="display:block;">← Zur Startseite</a>
     <span class="back-link" onclick="goToMenu()">← Zurück zur Übersicht</span>
     <div class="eyebrow" id="checklist-eyebrow"></div>
     <h1 id="checklist-title"></h1>
@@ -156,6 +159,7 @@
 
   <!-- REFERENCE SCREEN (nur lesen: Ablauf & Tipps) -->
   <section class="screen" id="screen-reference">
+    <a class="back-link" href="index.html" style="display:block;">← Zur Startseite</a>
     <span class="back-link" onclick="goToMenu()">← Zurück zur Übersicht</span>
     <div class="eyebrow" id="reference-eyebrow"></div>
     <h1 id="reference-title"></h1>
@@ -481,7 +485,15 @@
     const url = new URL(window.location.href);
     url.searchParams.set('brand', brand);
     window.history.replaceState({}, '', url);
-    showScreen('screen-menu');
+
+    const hash = window.location.hash.replace('#', '');
+    if (hash === 'ablauf') {
+      openReference('ablauf');
+    } else if (hash === 'aufbau' || hash === 'abschluss') {
+      openChecklist(hash);
+    } else {
+      showScreen('screen-menu');
+    }
   }
 
   function openChecklist(key) {
