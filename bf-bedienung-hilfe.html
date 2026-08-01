@@ -41,19 +41,25 @@
   .total-price.active { color: var(--mustard); }
   .total-sub { color: var(--chalk-muted); font-size: 13px; margin-top: 4px; }
 
-  .product-list { flex: 1; overflow-y: auto; padding: 10px 18px; display: grid; grid-template-columns: 1fr 1fr; gap: 10px; align-content: start; }
+  .product-list { flex: 1; overflow-y: auto; overflow-x: hidden; padding: 10px 18px; display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 1fr); gap: 10px; align-content: start; }
   .product-row { display: flex; align-items: center; gap: 8px; background: var(--panel); border: 1px solid var(--panel-border); border-radius: 16px; padding: 8px; }
   .round-btn { width: 40px; height: 40px; border-radius: 50%; border: none; display: flex; align-items: center; justify-content: center; cursor: pointer; flex-shrink: 0; }
   .btn-minus { background: var(--brick); color: var(--chalk); }
   .btn-minus:disabled { background: rgba(181,87,63,0.25); cursor: default; }
   .btn-plus { background: var(--mustard); color: #1F2A24; }
   .product-info { flex: 1; min-width: 0; }
-  .product-name { color: var(--chalk); font-weight: 700; font-size: 16px; line-height: 1.2; }
+  .product-name { color: var(--chalk); font-weight: 700; font-size: 16px; line-height: 1.2; overflow-wrap: break-word; }
   .product-meta { display: flex; align-items: center; gap: 8px; margin-top: 3px; flex-wrap: wrap; }
   .product-price { color: var(--chalk-muted); font-size: 14px; }
   .tally { display: flex; gap: 4px; flex-wrap: wrap; align-items: center; }
   .tally-zero { color: var(--chalk-muted); font-size: 14px; }
   .tally-num { color: var(--chalk); font-weight: 700; font-size: 17px; }
+
+  .product-row.wide { grid-column: 1 / -1; padding: 14px; gap: 14px; border-color: rgba(232,163,61,0.4); background: linear-gradient(180deg, rgba(232,163,61,0.10), var(--panel)); }
+  .product-row.wide .round-btn { width: 46px; height: 46px; }
+  .product-row.wide .product-name { font-size: 19px; }
+  .product-row.wide .product-desc { color: var(--chalk-muted); font-size: 13px; margin-top: 3px; }
+  .product-row.wide .product-price { font-size: 15px; }
 
   .footer { padding: 10px 20px 22px 20px; flex-shrink: 0; }
   .primary-btn { width: 100%; padding: 16px 0; border-radius: 14px; border: none; background: var(--sage); color: #16241A; font-size: 17px; font-weight: 700; cursor: pointer; font-family: inherit; }
@@ -157,14 +163,15 @@
     { id: "rotewurst", name: "Rote Wurst", price: 5 },
     { id: "thueringer", name: "Thüringer Bratwurst", price: 7 },
     { id: "currywurst", name: "Currywurst", price: 7 },
-    { id: "schweinenacken", name: "Schweinenackensteak", price: 8 },
-    { id: "haehnchenbrust", name: "Hähnchenbrustfilet", price: 8 },
+    { id: "schweinenacken", name: "Schweinenackensteak", displayName: "Schwein N.<br>Steak", price: 8 },
+    { id: "haehnchenbrust", name: "Hähnchenbrustfilet", displayName: "Hähnchen<br>Br. Filet", price: 8 },
     { id: "feuerwurst", name: "Feuerwurst", price: 8 },
     { id: "weisswurstbrezel", name: "Weißwurst mit Brezel", price: 7 },
+    { id: "maennergedeck", name: "Männergedeck mit Chip", price: 10, description: "Weißwurst mit Brezel + 1/2 Lt Hefeweizen", wide: true },
   ];
 
   const STORAGE_KEY = "bauchladen_history_v1";
-  const SW_VERSION = "1.2.0";
+  const SW_VERSION = "1.6.0";
   const HISTORY_PASSWORD = "111222";
   let order = {}; // { productId: qty } für den aktuellen Bon
   let toastTimer = null;
@@ -228,15 +235,16 @@
     container.innerHTML = PRODUCTS.map((p) => {
       const qty = order[p.id] || 0;
       return `
-        <div class="product-row row-enter">
+        <div class="product-row row-enter${p.wide ? " wide" : ""}" id="row-${p.id}">
           <button class="round-btn btn-minus btn-tap" data-action="minus" data-id="${p.id}" ${qty === 0 ? "disabled" : ""} aria-label="${p.name} entfernen">
             <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><path d="M5 12h14"/></svg>
           </button>
           <div class="product-info">
-            <div class="product-name">${p.name}</div>
+            <div class="product-name">${p.displayName || p.name}</div>
+            ${p.description ? `<div class="product-desc">${p.description}</div>` : ""}
             <div class="product-meta">
               <span class="product-price">${formatEUR(p.price)}</span>
-              ${tallyMarksSVG(qty)}
+              <span id="tally-${p.id}">${tallyMarksSVG(qty)}</span>
             </div>
           </div>
           <button class="round-btn btn-plus btn-tap" data-action="plus" data-id="${p.id}" aria-label="${p.name} hinzufügen">
@@ -251,12 +259,26 @@
         const action = btn.getAttribute("data-action");
         if (action === "plus") order[id] = (order[id] || 0) + 1;
         else order[id] = Math.max(0, (order[id] || 0) - 1);
-        renderOrder();
+        updateProductRow(id);
+        updateTotals();
       });
     });
   }
 
-  function renderOrder() {
+  // Aktualisiert nur eine einzelne Karte (Zähler + Minus-Button), ohne die restliche Liste neu zu zeichnen
+  function updateProductRow(id) {
+    const qty = order[id] || 0;
+    const tallyEl = document.getElementById("tally-" + id);
+    if (tallyEl) tallyEl.innerHTML = tallyMarksSVG(qty);
+    const row = document.getElementById("row-" + id);
+    if (row) {
+      const minusBtn = row.querySelector('[data-action="minus"]');
+      if (minusBtn) minusBtn.disabled = qty === 0;
+    }
+  }
+
+  // Aktualisiert nur die Summenanzeige oben + den "Nächster Kunde"-Button, rührt die Produktliste nicht an
+  function updateTotals() {
     const totalItems = Object.values(order).reduce((a, b) => a + b, 0);
     const totalPrice = PRODUCTS.reduce((sum, p) => sum + (order[p.id] || 0) * p.price, 0);
 
@@ -268,8 +290,12 @@
       totalItems === 0 ? "Bereit für die nächste Bestellung" : `${totalItems} Artikel`;
 
     document.getElementById("nextCustomerBtn").disabled = totalItems === 0;
+  }
 
-    renderProductList();
+  // Voller Neuaufbau (Zähler + Summen) — nur beim ersten Laden und nach Bon-Abschluss nötig
+  function renderOrder() {
+    updateTotals();
+    PRODUCTS.forEach((p) => updateProductRow(p.id));
   }
 
   function showToast(msg) {
@@ -387,7 +413,8 @@
 
   document.getElementById("versionTag").textContent = `v${SW_VERSION}`;
 
-  renderOrder();
+  renderProductList();
+  updateTotals();
 </script>
 </body>
 </html>
