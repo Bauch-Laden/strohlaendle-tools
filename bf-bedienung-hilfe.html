@@ -267,7 +267,7 @@
   ];
 
   const STORAGE_KEY = "bauchladen_history_v1";
-  const SW_VERSION = "2.1.0";
+  const SW_VERSION = "2.2.0";
   const HISTORY_PASSWORD = "447546";
   let order = {}; // { productId: qty } für den aktuellen Bon
   let toastTimer = null;
@@ -771,22 +771,23 @@
       return;
     }
     const BOM = "\uFEFF"; // sorgt dafür, dass Excel Umlaute korrekt anzeigt
+    let rows = [];
 
-    // Datei 1: Tagesübersicht
-    let rows1 = [];
-    rows1.push(["Datum", "Umsatz EUR", "Taler", "Gutschein EUR", "Bons"].concat(PRODUCTS.map((p) => p.name)).map(csvCell).join(";"));
+    // Block 1: Tagesübersicht
+    rows.push("TAGESÜBERSICHT");
+    rows.push(["Datum", "Umsatz EUR", "Taler", "Gutschein EUR", "Bons"].concat(PRODUCTS.map((p) => p.name)).map(csvCell).join(";"));
     dayKeys.forEach((k) => {
       const d = normDay(history[k]);
       const row = [k, csvNum(d.revenue), d.taler, csvNum(d.voucherValue), d.transactions]
         .concat(PRODUCTS.map((p) => d.products[p.id] || 0));
-      rows1.push(row.map(csvCell).join(";"));
+      rows.push(row.map(csvCell).join(";"));
     });
-    downloadFile(`bf-kasse-tage-${todayKey()}.csv`, BOM + rows1.join("\r\n"), "text/csv;charset=utf-8");
 
-    // Datei 2: Rabatt-Details (nur wenn vorhanden)
-    let rows2 = [];
-    rows2.push(["Datum", "Uhrzeit", "Rabatt %", "Kategorie", "Name", "Zugehörigkeit", "Produkte", "Warenwert EUR", "Bezahlt EUR"].map(csvCell).join(";"));
+    // Block 2: Rabatt-Details (nur wenn vorhanden)
     let specialCount = 0;
+    let detailRows = [];
+    detailRows.push("RABATT-DETAILS");
+    detailRows.push(["Datum", "Uhrzeit", "Rabatt %", "Kategorie", "Name", "Zugehörigkeit", "Produkte", "Warenwert EUR", "Bezahlt EUR"].map(csvCell).join(";"));
     dayKeys.forEach((k) => {
       const d = normDay(history[k]);
       d.specials.forEach((s) => {
@@ -799,15 +800,19 @@
           })
           .join(", ");
         const time = s.ts ? new Date(s.ts).toLocaleTimeString("de-DE", { hour: "2-digit", minute: "2-digit" }) : "";
-        rows2.push([k, time, s.discount, s.category, s.name, s.affiliation || "", itemsText, csvNum(s.fullValue || 0), csvNum(s.paidValue || 0)].map(csvCell).join(";"));
+        detailRows.push([k, time, s.discount, s.category, s.name, s.affiliation || "", itemsText, csvNum(s.fullValue || 0), csvNum(s.paidValue || 0)].map(csvCell).join(";"));
       });
     });
+
     if (specialCount > 0) {
-      downloadFile(`bf-kasse-details-${todayKey()}.csv`, BOM + rows2.join("\r\n"), "text/csv;charset=utf-8");
+      rows.push("");
+      rows.push("");
+      rows = rows.concat(detailRows);
     }
 
+    downloadFile(`bf-kasse-export-${todayKey()}.csv`, BOM + rows.join("\r\n"), "text/csv;charset=utf-8");
     document.getElementById("exportMsg").textContent = specialCount > 0
-      ? "2 CSV-Dateien erstellt ✓ (Tagesübersicht + Rabatt-Details)"
+      ? "CSV-Datei erstellt ✓ (Tagesübersicht + Rabatt-Details in einer Datei)"
       : "CSV-Datei erstellt ✓ (Tagesübersicht)";
   }
 
