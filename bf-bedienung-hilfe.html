@@ -100,6 +100,23 @@
   .modal-btn-cancel { background: transparent; border: 1px solid var(--panel-border); color: var(--chalk-muted); }
   .modal-btn-ok { background: var(--mustard); color: #1F2A24; }
 
+  .modal-text-input { letter-spacing: normal; text-align: left; font-size: 15px; margin-top: 8px; }
+  .modal-note { color: var(--chalk-muted); font-size: 13px; margin-top: 8px; line-height: 1.4; }
+
+  .pay-row { display: flex; gap: 10px; margin-bottom: 10px; }
+  .secondary-btn { flex: 1; padding: 12px 0; border-radius: 12px; border: 1px solid var(--panel-border); background: var(--panel); color: var(--chalk); font-size: 14px; font-weight: 700; cursor: pointer; font-family: inherit; }
+  .secondary-btn:disabled { opacity: 0.35; cursor: default; }
+
+  .cat-btn { display: block; width: 100%; text-align: left; padding: 10px 12px; border-radius: 10px; border: 1px solid var(--panel-border); background: var(--bg); color: var(--chalk); font-size: 14px; cursor: pointer; font-family: inherit; margin-bottom: 8px; }
+  .cat-btn.selected { border-color: var(--mustard); background: rgba(232,163,61,0.12); }
+
+  .io-row { display: flex; gap: 8px; padding: 12px 20px 0 20px; flex-shrink: 0; }
+  .file-input { color: var(--chalk-muted); font-size: 13px; margin-top: 8px; width: 100%; }
+
+  .details-btn { background: transparent; border: 1px solid var(--panel-border); color: var(--chalk-muted); border-radius: 8px; padding: 4px 10px; font-size: 12px; cursor: pointer; font-family: inherit; margin-top: 8px; }
+  .special-entry { border-top: 1px dashed var(--panel-border); padding: 7px 0; font-size: 12.5px; color: var(--chalk-muted); line-height: 1.45; }
+  .special-entry b { color: var(--chalk); }
+
   .hidden { display: none !important; }
 </style>
 </head>
@@ -122,6 +139,10 @@
     <div class="product-list" id="productList"></div>
 
     <div class="footer">
+      <div class="pay-row">
+        <button class="secondary-btn btn-tap" id="talerBtn" disabled>🪙 Strohtaler</button>
+        <button class="secondary-btn btn-tap" id="rabattBtn" disabled>% Rabatt</button>
+      </div>
       <button class="primary-btn btn-tap" id="nextCustomerBtn" disabled>Nächster Kunde</button>
       <div class="footer-bottom-bar">
         <div class="brand">🍽️ Bauch &amp; Flamme Bedienung Hilfe <span class="version-tag" id="versionTag"></span></div>
@@ -141,6 +162,10 @@
       <span class="view-title" style="flex:1">Verlauf</span>
       <button class="link-btn btn-tap" id="clearHistoryBtn" style="color: var(--brick);">🗑️ Löschen</button>
     </div>
+    <div class="io-row">
+      <button class="secondary-btn btn-tap" id="exportBtn">⬇️ Export</button>
+      <button class="secondary-btn btn-tap" id="importBtn">⬆️ Import</button>
+    </div>
     <div class="history-list" id="historyList"></div>
   </div>
 
@@ -153,6 +178,73 @@
       <div class="modal-actions">
         <button class="modal-btn modal-btn-cancel btn-tap" id="passwordCancelBtn">Abbrechen</button>
         <button class="modal-btn modal-btn-ok btn-tap" id="passwordOkBtn">Bestätigen</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- STROHTALER-MODAL -->
+  <div id="talerModal" class="modal-overlay hidden">
+    <div class="modal-box">
+      <div class="modal-title">🪙 Zahlung mit Strohtaler</div>
+      <div class="modal-note" id="talerTotalNote" style="margin-top:0; margin-bottom:8px;"></div>
+      <input type="number" inputmode="numeric" min="0" step="1" class="modal-input" id="talerInput" autocomplete="off">
+      <div class="modal-note">Anzahl Taler (1 Taler = 1 €). Ein evtl. Restbetrag wird automatisch als € verbucht.</div>
+      <div class="modal-error" id="talerError"></div>
+      <div class="modal-actions">
+        <button class="modal-btn modal-btn-cancel btn-tap" id="talerCancelBtn">Abbrechen</button>
+        <button class="modal-btn modal-btn-ok btn-tap" id="talerOkBtn">Buchen</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- RABATT-MODAL -->
+  <div id="rabattModal" class="modal-overlay hidden">
+    <div class="modal-box">
+      <div class="modal-title">% Rabatt buchen</div>
+      <div id="rabattCats">
+        <button class="cat-btn btn-tap" data-discount="50" data-cat="MA Intern">50 % · MA Intern</button>
+        <button class="cat-btn btn-tap" data-discount="50" data-cat="MA Extern">50 % · MA Extern</button>
+        <button class="cat-btn btn-tap" data-discount="100" data-cat="MA Intern">100 % · MA Intern</button>
+        <button class="cat-btn btn-tap" data-discount="100" data-cat="Bands/Vortragende/Partner">100 % · Bands, Vortragende, Partner</button>
+      </div>
+      <input type="text" class="modal-input modal-text-input" id="rabattName" placeholder="Name, Nachname" autocomplete="off">
+      <input type="text" class="modal-input modal-text-input hidden" id="rabattAffiliation" placeholder="Zugehörigkeit (z. B. DRK)" autocomplete="off">
+      <div class="modal-note" id="rabattPriceNote"></div>
+      <div class="modal-error" id="rabattError"></div>
+      <div class="modal-actions">
+        <button class="modal-btn modal-btn-cancel btn-tap" id="rabattCancelBtn">Abbrechen</button>
+        <button class="modal-btn modal-btn-ok btn-tap" id="rabattOkBtn">Buchen</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- EXPORT-MODAL -->
+  <div id="exportModal" class="modal-overlay hidden">
+    <div class="modal-box">
+      <div class="modal-title">⬇️ Daten exportieren</div>
+      <div class="modal-note" style="margin-top:0;">Alle Tagesdaten als Datei speichern oder als Text kopieren (z. B. zum Verschicken per Nachricht ans neue Gerät).</div>
+      <div class="modal-error" id="exportMsg" style="color: var(--sage);"></div>
+      <div class="modal-actions" style="flex-direction: column;">
+        <button class="modal-btn modal-btn-ok btn-tap" id="exportDownloadBtn">⬇️ Datei herunterladen</button>
+        <button class="modal-btn modal-btn-ok btn-tap" id="exportCopyBtn">📋 Text kopieren</button>
+        <button class="modal-btn modal-btn-ok btn-tap" id="exportCsvBtn">📊 CSV für Excel</button>
+        <button class="modal-btn modal-btn-cancel btn-tap" id="exportCloseBtn">Schließen</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- IMPORT-MODAL -->
+  <div id="importModal" class="modal-overlay hidden">
+    <div class="modal-box">
+      <div class="modal-title">⬆️ Daten importieren</div>
+      <input type="file" id="importFile" accept=".json,application/json,text/plain" class="file-input">
+      <div class="modal-note">…oder den kopierten Export-Text hier einfügen:</div>
+      <textarea class="modal-input modal-text-input" id="importText" rows="4" style="font-size:12px; resize: vertical;"></textarea>
+      <div class="modal-note">Die importierten Tage werden mit den vorhandenen Daten zusammengeführt.</div>
+      <div class="modal-error" id="importError"></div>
+      <div class="modal-actions">
+        <button class="modal-btn modal-btn-cancel btn-tap" id="importCancelBtn">Abbrechen</button>
+        <button class="modal-btn modal-btn-ok btn-tap" id="importOkBtn">Importieren</button>
       </div>
     </div>
   </div>
@@ -175,10 +267,26 @@
   ];
 
   const STORAGE_KEY = "bauchladen_history_v1";
-  const SW_VERSION = "1.8.0";
-  const HISTORY_PASSWORD = "111222";
+  const SW_VERSION = "2.1.0";
+  const HISTORY_PASSWORD = "447546";
   let order = {}; // { productId: qty } für den aktuellen Bon
   let toastTimer = null;
+
+  // Stellt sicher, dass ein Tages-Datensatz alle Felder hat (auch ältere Datensätze aus v1.x)
+  function normDay(d) {
+    return {
+      products: d.products || {},
+      revenue: d.revenue || 0,
+      taler: d.taler || 0,
+      voucherValue: d.voucherValue || 0,
+      transactions: d.transactions || 0,
+      specials: d.specials || [],
+    };
+  }
+
+  function escapeHtml(s) {
+    return String(s).replace(/[&<>"']/g, (c) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" }[c]));
+  }
 
   function todayKey() {
     const d = new Date();
@@ -292,10 +400,9 @@
     }
   }
 
-  // Aktualisiert nur die Summenanzeige oben + den "Nächster Kunde"-Button, rührt die Produktliste nicht an
+  // Aktualisiert nur die Summenanzeige oben + die Buchungs-Buttons, rührt die Produktliste nicht an
   function updateTotals() {
-    const totalItems = Object.values(order).reduce((a, b) => a + b, 0);
-    const totalPrice = PRODUCTS.reduce((sum, p) => sum + (order[p.id] || 0) * p.price, 0);
+    const { totalItems, totalPrice } = currentTotals();
 
     const totalPriceEl = document.getElementById("totalPrice");
     totalPriceEl.textContent = formatEUR(totalPrice);
@@ -305,6 +412,34 @@
       totalItems === 0 ? "Bereit für die nächste Bestellung" : `${totalItems} Artikel`;
 
     document.getElementById("nextCustomerBtn").disabled = totalItems === 0;
+    document.getElementById("talerBtn").disabled = totalItems === 0;
+    document.getElementById("rabattBtn").disabled = totalItems === 0;
+  }
+
+  function currentTotals() {
+    const totalItems = Object.values(order).reduce((a, b) => a + b, 0);
+    const totalPrice = PRODUCTS.reduce((sum, p) => sum + (order[p.id] || 0) * p.price, 0);
+    return { totalItems, totalPrice };
+  }
+
+  // Gemeinsame Buchungsfunktion für alle Zahlungsarten
+  function saveBon({ eurAmount, talerAmount = 0, voucherAmount = 0, special = null }) {
+    const history = loadHistory();
+    const dateKey = todayKey();
+    const day = normDay(history[dateKey] || {});
+    Object.entries(order).forEach(([id, qty]) => {
+      if (qty > 0) day.products[id] = (day.products[id] || 0) + qty;
+    });
+    day.revenue += eurAmount;
+    day.taler += talerAmount;
+    day.voucherValue += voucherAmount;
+    day.transactions += 1;
+    if (special) day.specials.push(special);
+    history[dateKey] = day;
+    saveHistory(history);
+
+    order = {};
+    renderOrder();
   }
 
   // Voller Neuaufbau (Zähler + Summen) — nur beim ersten Laden und nach Bon-Abschluss nötig
@@ -323,23 +458,9 @@
   }
 
   function nextCustomer() {
-    const totalItems = Object.values(order).reduce((a, b) => a + b, 0);
+    const { totalItems, totalPrice } = currentTotals();
     if (totalItems === 0) return;
-    const totalPrice = PRODUCTS.reduce((sum, p) => sum + (order[p.id] || 0) * p.price, 0);
-
-    const history = loadHistory();
-    const dateKey = todayKey();
-    const existing = history[dateKey] || { products: {}, revenue: 0, transactions: 0 };
-    Object.entries(order).forEach(([id, qty]) => {
-      if (qty > 0) existing.products[id] = (existing.products[id] || 0) + qty;
-    });
-    existing.revenue += totalPrice;
-    existing.transactions += 1;
-    history[dateKey] = existing;
-    saveHistory(history);
-
-    order = {};
-    renderOrder();
+    saveBon({ eurAmount: totalPrice });
     showToast("Bon gespeichert ✓");
   }
 
@@ -347,7 +468,7 @@
     const history = loadHistory();
     const days = Object.keys(history)
       .sort((a, b) => (a < b ? 1 : -1))
-      .map((k) => ({ dateKey: k, ...history[k] }));
+      .map((k) => ({ dateKey: k, ...normDay(history[k]) }));
 
     const container = document.getElementById("historyList");
 
@@ -360,16 +481,50 @@
       const itemsHtml = PRODUCTS.filter((p) => (day.products || {})[p.id])
         .map((p) => `<div class="day-item-row"><span class="day-item-name">${p.name}</span><span class="day-item-qty">${day.products[p.id]}×</span></div>`)
         .join("");
+
+      // Zusammengesetzte Umsatzzeile: 500 € + 10 Taler + 40 € Gutschein
+      let revenueParts = [formatEUR(day.revenue)];
+      if (day.taler > 0) revenueParts.push(`${day.taler} Taler`);
+      if (day.voucherValue > 0) revenueParts.push(`${formatEUR(day.voucherValue)} Gutschein`);
+
+      // Detail-Einträge für Rabatte/Gutscheine (aufklappbar)
+      let detailsHtml = "";
+      if (day.specials.length > 0) {
+        const entries = day.specials.map((s) => {
+          const itemsText = Object.entries(s.items || {})
+            .filter(([, q]) => q > 0)
+            .map(([id, q]) => {
+              const prod = PRODUCTS.find((p) => p.id === id);
+              return `${q}x ${prod ? prod.name : id}`;
+            })
+            .join(", ");
+          const time = s.ts ? new Date(s.ts).toLocaleTimeString("de-DE", { hour: "2-digit", minute: "2-digit" }) : "";
+          const paidText = s.discount === 50 ? ` · bezahlt ${formatEUR(s.paidValue)}` : "";
+          return `<div class="special-entry"><b>${s.discount} % · ${escapeHtml(s.category)}</b> — ${escapeHtml(s.name)}${s.affiliation ? ", " + escapeHtml(s.affiliation) : ""} ${time ? "· " + time : ""}<br>${escapeHtml(itemsText)} · Wert ${formatEUR(s.fullValue)}${paidText}</div>`;
+        }).join("");
+        detailsHtml = `
+          <button class="details-btn btn-tap" data-day="${day.dateKey}">📄 Details (${day.specials.length})</button>
+          <div class="hidden" id="specials-${day.dateKey}">${entries}</div>`;
+      }
+
       return `
         <div class="day-card">
           <div class="day-top">
             <div class="day-date">${formatDateKey(day.dateKey)}</div>
-            <div class="day-revenue">${formatEUR(day.revenue || 0)}</div>
+            <div class="day-revenue">${revenueParts.join(" + ")}</div>
           </div>
           <div class="day-sub">${day.transactions || 0} ${day.transactions === 1 ? "Bon" : "Bons"}</div>
           <div class="day-items">${itemsHtml}</div>
+          ${detailsHtml}
         </div>`;
     }).join("");
+
+    container.querySelectorAll(".details-btn").forEach((btn) => {
+      btn.addEventListener("click", () => {
+        const el = document.getElementById("specials-" + btn.getAttribute("data-day"));
+        if (el) el.classList.toggle("hidden");
+      });
+    });
   }
 
   function openHistory() {
@@ -416,6 +571,317 @@
   });
 
   document.getElementById("nextCustomerBtn").addEventListener("click", nextCustomer);
+
+  // ---------- STROHTALER ----------
+  function openTalerModal() {
+    const { totalItems, totalPrice } = currentTotals();
+    if (totalItems === 0) return;
+    document.getElementById("talerTotalNote").textContent = `Bon-Summe: ${formatEUR(totalPrice)}`;
+    const input = document.getElementById("talerInput");
+    input.value = Math.round(totalPrice);
+    document.getElementById("talerError").textContent = "";
+    document.getElementById("talerModal").classList.remove("hidden");
+    setTimeout(() => { input.focus(); input.select(); }, 50);
+  }
+
+  function confirmTaler() {
+    const { totalPrice } = currentTotals();
+    const raw = document.getElementById("talerInput").value;
+    const taler = parseInt(raw, 10);
+    const errEl = document.getElementById("talerError");
+    if (!Number.isFinite(taler) || taler < 1) {
+      errEl.textContent = "Bitte mindestens 1 Taler eingeben.";
+      return;
+    }
+    if (taler > totalPrice) {
+      errEl.textContent = `Maximal ${Math.round(totalPrice)} Taler möglich (Bon-Summe).`;
+      return;
+    }
+    const eurRest = totalPrice - taler;
+    document.getElementById("talerModal").classList.add("hidden");
+    saveBon({ eurAmount: eurRest, talerAmount: taler });
+    showToast(`Bon gespeichert ✓ (${taler} Taler${eurRest > 0 ? " + " + formatEUR(eurRest) : ""})`);
+  }
+
+  document.getElementById("talerBtn").addEventListener("click", openTalerModal);
+  document.getElementById("talerCancelBtn").addEventListener("click", () => document.getElementById("talerModal").classList.add("hidden"));
+  document.getElementById("talerOkBtn").addEventListener("click", confirmTaler);
+  document.getElementById("talerInput").addEventListener("keydown", (e) => { if (e.key === "Enter") confirmTaler(); });
+
+  // ---------- RABATT ----------
+  let rabattSelection = null; // { discount: 50|100, category: string }
+
+  function openRabattModal() {
+    const { totalItems } = currentTotals();
+    if (totalItems === 0) return;
+    rabattSelection = null;
+    document.querySelectorAll("#rabattCats .cat-btn").forEach((b) => b.classList.remove("selected"));
+    document.getElementById("rabattName").value = "";
+    document.getElementById("rabattAffiliation").value = "";
+    document.getElementById("rabattAffiliation").classList.add("hidden");
+    document.getElementById("rabattPriceNote").textContent = "";
+    document.getElementById("rabattError").textContent = "";
+    document.getElementById("rabattModal").classList.remove("hidden");
+  }
+
+  document.querySelectorAll("#rabattCats .cat-btn").forEach((btn) => {
+    btn.addEventListener("click", () => {
+      document.querySelectorAll("#rabattCats .cat-btn").forEach((b) => b.classList.remove("selected"));
+      btn.classList.add("selected");
+      const discount = parseInt(btn.getAttribute("data-discount"), 10);
+      const category = btn.getAttribute("data-cat");
+      rabattSelection = { discount, category };
+
+      // Zugehörigkeits-Feld nur bei Bands/Vortragende/Partner
+      const affEl = document.getElementById("rabattAffiliation");
+      if (category === "Bands/Vortragende/Partner") affEl.classList.remove("hidden");
+      else affEl.classList.add("hidden");
+
+      // Preisvorschau: bei 50% halber Preis, bei 100% kein Preis
+      const { totalPrice } = currentTotals();
+      const noteEl = document.getElementById("rabattPriceNote");
+      if (discount === 50) noteEl.textContent = `Zu zahlen: ${formatEUR(totalPrice / 2)}`;
+      else noteEl.textContent = "";
+    });
+  });
+
+  function confirmRabatt() {
+    const errEl = document.getElementById("rabattError");
+    if (!rabattSelection) {
+      errEl.textContent = "Bitte eine Rabatt-Kategorie wählen.";
+      return;
+    }
+    const name = document.getElementById("rabattName").value.trim();
+    if (!name) {
+      errEl.textContent = "Bitte Name eingeben.";
+      return;
+    }
+    const needsAffiliation = rabattSelection.category === "Bands/Vortragende/Partner";
+    const affiliation = document.getElementById("rabattAffiliation").value.trim();
+    if (needsAffiliation && !affiliation) {
+      errEl.textContent = "Bitte Zugehörigkeit eingeben (z. B. DRK).";
+      return;
+    }
+
+    const { totalPrice } = currentTotals();
+    const special = {
+      ts: new Date().toISOString(),
+      discount: rabattSelection.discount,
+      category: rabattSelection.category,
+      name: name,
+      affiliation: needsAffiliation ? affiliation : "",
+      items: { ...order },
+      fullValue: totalPrice,
+      paidValue: rabattSelection.discount === 50 ? totalPrice / 2 : 0,
+    };
+
+    document.getElementById("rabattModal").classList.add("hidden");
+
+    if (rabattSelection.discount === 50) {
+      saveBon({ eurAmount: totalPrice / 2, special });
+      showToast(`Bon gespeichert ✓ (50 %, ${formatEUR(totalPrice / 2)})`);
+    } else {
+      saveBon({ eurAmount: 0, voucherAmount: totalPrice, special });
+      showToast("Bon gespeichert ✓ (Gutschein)");
+    }
+  }
+
+  document.getElementById("rabattBtn").addEventListener("click", openRabattModal);
+  document.getElementById("rabattCancelBtn").addEventListener("click", () => document.getElementById("rabattModal").classList.add("hidden"));
+  document.getElementById("rabattOkBtn").addEventListener("click", confirmRabatt);
+
+  // ---------- EXPORT ----------
+  function buildExportText() {
+    return JSON.stringify({
+      app: "bf-bedienung-hilfe",
+      version: SW_VERSION,
+      exportedAt: new Date().toISOString(),
+      history: loadHistory(),
+    });
+  }
+
+  document.getElementById("exportBtn").addEventListener("click", () => {
+    document.getElementById("exportMsg").textContent = "";
+    document.getElementById("exportModal").classList.remove("hidden");
+  });
+  document.getElementById("exportCloseBtn").addEventListener("click", () => document.getElementById("exportModal").classList.add("hidden"));
+
+  document.getElementById("exportDownloadBtn").addEventListener("click", () => {
+    const blob = new Blob([buildExportText()], { type: "application/json" });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement("a");
+    a.href = url;
+    a.download = `bf-kasse-export-${todayKey()}.json`;
+    document.body.appendChild(a);
+    a.click();
+    document.body.removeChild(a);
+    URL.revokeObjectURL(url);
+    document.getElementById("exportMsg").textContent = "Datei erstellt ✓";
+  });
+
+  document.getElementById("exportCopyBtn").addEventListener("click", () => {
+    const text = buildExportText();
+    const done = () => { document.getElementById("exportMsg").textContent = "Kopiert ✓ — jetzt z. B. per Nachricht ans neue Gerät schicken"; };
+    if (navigator.clipboard && navigator.clipboard.writeText) {
+      navigator.clipboard.writeText(text).then(done).catch(() => fallbackCopy(text, done));
+    } else {
+      fallbackCopy(text, done);
+    }
+  });
+
+  function fallbackCopy(text, done) {
+    const ta = document.createElement("textarea");
+    ta.value = text;
+    ta.style.position = "fixed";
+    ta.style.opacity = "0";
+    document.body.appendChild(ta);
+    ta.select();
+    try { document.execCommand("copy"); done(); } catch (e) { document.getElementById("exportMsg").textContent = "Kopieren fehlgeschlagen — bitte Datei-Download nutzen."; }
+    document.body.removeChild(ta);
+  }
+
+  // ---------- CSV-EXPORT (für Excel, deutsches Format) ----------
+  function csvNum(n) {
+    // Deutsche Dezimalschreibweise (Komma), 2 Nachkommastellen nur wenn nötig
+    return (Math.round(n * 100) / 100).toString().replace(".", ",");
+  }
+
+  function csvCell(s) {
+    const str = String(s);
+    return /[;"\n]/.test(str) ? '"' + str.replace(/"/g, '""') + '"' : str;
+  }
+
+  function downloadFile(filename, content, mime) {
+    const blob = new Blob([content], { type: mime });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement("a");
+    a.href = url;
+    a.download = filename;
+    document.body.appendChild(a);
+    a.click();
+    document.body.removeChild(a);
+    URL.revokeObjectURL(url);
+  }
+
+  function exportCsv() {
+    const history = loadHistory();
+    const dayKeys = Object.keys(history).filter((k) => /^\d{4}-\d{2}-\d{2}$/.test(k)).sort();
+    if (dayKeys.length === 0) {
+      document.getElementById("exportMsg").textContent = "Keine Daten zum Exportieren vorhanden.";
+      return;
+    }
+    const BOM = "\uFEFF"; // sorgt dafür, dass Excel Umlaute korrekt anzeigt
+
+    // Datei 1: Tagesübersicht
+    let rows1 = [];
+    rows1.push(["Datum", "Umsatz EUR", "Taler", "Gutschein EUR", "Bons"].concat(PRODUCTS.map((p) => p.name)).map(csvCell).join(";"));
+    dayKeys.forEach((k) => {
+      const d = normDay(history[k]);
+      const row = [k, csvNum(d.revenue), d.taler, csvNum(d.voucherValue), d.transactions]
+        .concat(PRODUCTS.map((p) => d.products[p.id] || 0));
+      rows1.push(row.map(csvCell).join(";"));
+    });
+    downloadFile(`bf-kasse-tage-${todayKey()}.csv`, BOM + rows1.join("\r\n"), "text/csv;charset=utf-8");
+
+    // Datei 2: Rabatt-Details (nur wenn vorhanden)
+    let rows2 = [];
+    rows2.push(["Datum", "Uhrzeit", "Rabatt %", "Kategorie", "Name", "Zugehörigkeit", "Produkte", "Warenwert EUR", "Bezahlt EUR"].map(csvCell).join(";"));
+    let specialCount = 0;
+    dayKeys.forEach((k) => {
+      const d = normDay(history[k]);
+      d.specials.forEach((s) => {
+        specialCount++;
+        const itemsText = Object.entries(s.items || {})
+          .filter(([, q]) => q > 0)
+          .map(([id, q]) => {
+            const prod = PRODUCTS.find((p) => p.id === id);
+            return `${q}x ${prod ? prod.name : id}`;
+          })
+          .join(", ");
+        const time = s.ts ? new Date(s.ts).toLocaleTimeString("de-DE", { hour: "2-digit", minute: "2-digit" }) : "";
+        rows2.push([k, time, s.discount, s.category, s.name, s.affiliation || "", itemsText, csvNum(s.fullValue || 0), csvNum(s.paidValue || 0)].map(csvCell).join(";"));
+      });
+    });
+    if (specialCount > 0) {
+      downloadFile(`bf-kasse-details-${todayKey()}.csv`, BOM + rows2.join("\r\n"), "text/csv;charset=utf-8");
+    }
+
+    document.getElementById("exportMsg").textContent = specialCount > 0
+      ? "2 CSV-Dateien erstellt ✓ (Tagesübersicht + Rabatt-Details)"
+      : "CSV-Datei erstellt ✓ (Tagesübersicht)";
+  }
+
+  document.getElementById("exportCsvBtn").addEventListener("click", exportCsv);
+
+  // ---------- IMPORT ----------
+  document.getElementById("importBtn").addEventListener("click", () => {
+    document.getElementById("importText").value = "";
+    document.getElementById("importFile").value = "";
+    document.getElementById("importError").textContent = "";
+    document.getElementById("importModal").classList.remove("hidden");
+  });
+  document.getElementById("importCancelBtn").addEventListener("click", () => document.getElementById("importModal").classList.add("hidden"));
+
+  function mergeImportedHistory(imported) {
+    const local = loadHistory();
+    let count = 0;
+    Object.entries(imported).forEach(([key, value]) => {
+      if (!/^\d{4}-\d{2}-\d{2}$/.test(key)) return; // nur gültige Datums-Schlüssel
+      const inc = normDay(value);
+      if (local[key]) {
+        const cur = normDay(local[key]);
+        Object.entries(inc.products).forEach(([pid, q]) => { cur.products[pid] = (cur.products[pid] || 0) + q; });
+        cur.revenue += inc.revenue;
+        cur.taler += inc.taler;
+        cur.voucherValue += inc.voucherValue;
+        cur.transactions += inc.transactions;
+        cur.specials = cur.specials.concat(inc.specials);
+        local[key] = cur;
+      } else {
+        local[key] = inc;
+      }
+      count++;
+    });
+    saveHistory(local);
+    return count;
+  }
+
+  function doImport(text) {
+    const errEl = document.getElementById("importError");
+    try {
+      const obj = JSON.parse(text);
+      const hist = obj && obj.history ? obj.history : obj; // akzeptiert auch rohen History-Export
+      if (!hist || typeof hist !== "object" || Array.isArray(hist)) {
+        errEl.textContent = "Format nicht erkannt — bitte den unveränderten Export verwenden.";
+        return;
+      }
+      const count = mergeImportedHistory(hist);
+      if (count === 0) {
+        errEl.textContent = "Keine Tagesdaten im Import gefunden.";
+        return;
+      }
+      document.getElementById("importModal").classList.add("hidden");
+      renderHistory();
+      showToast(`${count} ${count === 1 ? "Tag" : "Tage"} importiert ✓`);
+    } catch (e) {
+      errEl.textContent = "Import fehlgeschlagen — Text ist kein gültiger Export.";
+    }
+  }
+
+  document.getElementById("importOkBtn").addEventListener("click", () => {
+    const file = document.getElementById("importFile").files[0];
+    const pasted = document.getElementById("importText").value.trim();
+    if (file) {
+      const reader = new FileReader();
+      reader.onload = () => doImport(reader.result);
+      reader.onerror = () => { document.getElementById("importError").textContent = "Datei konnte nicht gelesen werden."; };
+      reader.readAsText(file);
+    } else if (pasted) {
+      doImport(pasted);
+    } else {
+      document.getElementById("importError").textContent = "Bitte Datei wählen oder Export-Text einfügen.";
+    }
+  });
 
   document.getElementById("clearHistoryBtn").addEventListener("click", () => {
     const confirmed = window.confirm("Gesamten Verlauf wirklich unwiderruflich löschen?");
