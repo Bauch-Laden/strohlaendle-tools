@@ -143,11 +143,6 @@
       <div class="menu-text"><div class="menu-title">Abschluss und Putzen</div><div class="menu-sub">Nach Verkaufsende</div></div>
       <div class="menu-arrow">→</div>
     </div>
-    <div class="menu-card" id="bf-bedienung-tile" style="display:none;" onclick="window.location.href='bf-bedienung-hilfe.html'">
-      <div class="menu-icon">🖥️</div>
-      <div class="menu-text"><div class="menu-title">Bedienung Hilfe</div><div class="menu-sub">Kassensystem Schritt für Schritt</div></div>
-      <div class="menu-arrow">→</div>
-    </div>
   </section>
 
   <!-- CHECKLIST SCREEN (abhakbar: Aufbau / Abschluss) -->
@@ -482,7 +477,6 @@
     const tag = document.getElementById('menu-brand-tag');
     tag.className = 'brand-tag ' + currentBrand;
     tag.textContent = currentBrand === 'bf' ? '🔥 Bauch & Flamme Ansicht' : '🧡 Bauch-Laden Ansicht';
-    document.getElementById('bf-bedienung-tile').style.display = currentBrand === 'bf' ? 'flex' : 'none';
   }
 
   function chooseBrand(brand) {
