@@ -1,0 +1,352 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Bauch &amp; Flamme – Bestellungen</title>
+<style>
+  :root {
+    --bg: #1F2A24;
+    --panel: #26332C;
+    --panel-border: #35463C;
+    --chalk: #F5F1E6;
+    --chalk-muted: #A9B3A6;
+    --mustard: #E8A33D;
+    --sage: #7FA875;
+    --weinrot: #8E2230;
+    --weinrot-hell: #E05C6E;
+  }
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  html, body { height: 100%; overflow: hidden; }
+  body {
+    background: var(--bg);
+    color: var(--chalk);
+    font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+    display: flex; flex-direction: column;
+    padding: 2vh 2.5vw;
+    -webkit-user-select: none; user-select: none;
+    -webkit-tap-highlight-color: transparent;
+  }
+
+  .hint { font-size: 2.1vh; color: #FFFFFF; opacity: 0.9; }
+  .version { font-size: 1.7vh; color: #FFFFFF; opacity: 0.5; font-weight: 400; letter-spacing: 0; margin-left: 0.6vw; }
+  /* Wartende Bestellungen: groß und mittig über den Boxen */
+  .waiting { font-size: 4.6vh; font-weight: 800; color: #FFFFFF;
+             background: var(--weinrot); border: 2px solid var(--weinrot-hell);
+             border-radius: 1.4vh; padding: 0.9vh 2.4vw; white-space: nowrap; margin-top: 1.4vh; }
+  .hidden { display: none; }
+  .undo-btn {
+    font-family: inherit; font-size: 2.2vh; font-weight: 700;
+    color: #FFFFFF; background: rgba(245,241,230,0.10);
+    border: 1px solid var(--panel-border); border-radius: 1vh;
+    padding: 0.7vh 1.2vw; cursor: pointer; transition: background 0.15s, color 0.15s;
+  }
+  .undo-btn:hover { background: rgba(245,241,230,0.15); color: var(--chalk); }
+  .undo-btn:active { transform: scale(0.96); }
+  .undo-btn.flash { background: rgba(127,168,117,0.3); color: var(--chalk); }
+  .footer-btns { display: flex; gap: 1vw; }
+  .all-btn { border-color: rgba(127,168,117,0.5); }
+  .all-btn:hover { background: rgba(127,168,117,0.2); }
+
+  header { display: grid; grid-template-columns: 1fr auto 1fr; align-items: start; flex-shrink: 0; margin-bottom: 1.5vh; gap: 1vw; }
+  header .status { justify-self: end; }
+  .mitte { justify-self: center; display: flex; flex-direction: column; align-items: center; gap: 0.8vh; align-self: start; }
+  .datetime { font-size: 2.4vh; color: #FFFFFF; white-space: nowrap; }
+
+  footer { display: flex; align-items: center; justify-content: space-between; flex-shrink: 0;
+           margin-top: 1.6vh; padding-top: 1.2vh; border-top: 1px solid var(--panel-border); }
+  .mid { justify-self: center; display: flex; flex-direction: column; align-items: center; gap: 0.6vh; }
+  h1 { font-size: 3.2vh; letter-spacing: 0.06em; text-transform: uppercase; color: #FFFFFF; font-weight: 700; line-height: 1.1; }
+  .status { font-size: 2.2vh; color: #FFFFFF; display: flex; align-items: center; gap: 0.8vw; white-space: nowrap; }
+  .conn { display: flex; align-items: center; gap: 0.5vw; font-size: 1.8vh; white-space: nowrap; }
+  .dot { width: 1.4vh; height: 1.4vh; border-radius: 50%; background: var(--sage); flex-shrink: 0; }
+  .dot.offline { background: #B5573F; }
+  .conn.online #connText { color: var(--sage); }
+  .conn.offline #connText { color: #D98169; font-weight: 700; }
+
+  /* Feste Slot-Breiten: jede Box ist immer gleich breit, egal wie viele offen sind */
+  .list { flex: 1; position: relative; min-height: 0;
+          --gap-w: 1.2vw;
+          --slot-w: calc((100% - 4 * var(--gap-w)) / 5); }
+
+  /* Äußerer Rahmen: Nummer oben + Karte darunter, auf festem Slot positioniert */
+  .bon {
+    position: absolute; top: 50%; left: 0;
+    width: var(--slot-w);
+    display: flex; flex-direction: column; align-items: stretch;
+    gap: 1vh; cursor: pointer;
+    /* Slot-Position: 0 = ganz links … 4 = ganz rechts */
+    transform: translate(calc(var(--slot, 0) * (100% + var(--gap-w))), -50%);
+    transition: transform 1s cubic-bezier(0.22, 0.61, 0.36, 1), opacity 0.35s ease;
+  }
+  .bon.row-enter { animation: fadeIn 0.35s ease-out; }
+  @keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
+
+  /* Große, mittige Positionsnummer über der Box */
+  .pos-nr {
+    text-align: center; font-size: 6vh; font-weight: 800; line-height: 1;
+    color: #FFFFFF; opacity: 0.9; letter-spacing: -0.02em;
+  }
+  .bon.done .pos-nr { color: var(--sage); opacity: 0.8; }
+
+  /* Die eigentliche Bon-Karte */
+  .bon-card {
+    background: var(--panel); border: 2px solid var(--panel-border); border-radius: 1.6vh;
+    padding: 2vh 1.2vw; display: flex; flex-direction: column; gap: 1.2vh;
+    height: 32vh; overflow: hidden; position: relative;
+  }
+
+  /* Ausgegeben: abgehakt, ausgegraut, verschwindet nach kurzer Zeit von selbst */
+  .bon:active .bon-card { filter: brightness(1.25); }
+  .bon.done .bon-card { opacity: 0.4; border-color: var(--sage); background: var(--panel); }
+  .bon.done .bon-item { text-decoration: line-through; }
+  .bon.done .bon-qty { color: #FFFFFF; }
+  .bon.done .bon-time { color: var(--sage); }
+
+  .done-badge {
+    position: absolute; top: 1vh; right: 1vw;
+    font-size: 4vh; color: var(--sage); line-height: 1; display: none;
+  }
+  .bon.done .done-badge { display: block; }
+
+  .bon-time { font-size: 2.4vh; color: #FFFFFF; font-weight: 700; flex-shrink: 0; letter-spacing: 0.04em; }
+  .bon-items { display: flex; flex-direction: column; gap: 0.8vh; min-height: 0; overflow: hidden; flex: 1; }
+  .bon-item { font-size: 3.2vh; font-weight: 700; line-height: 1.15; overflow-wrap: break-word; }
+  .bon-qty { color: var(--mustard); margin-right: 0.4vw; }
+
+  .empty { position: absolute; inset: 0; display: flex; align-items: center; justify-content: center; font-size: 3.5vh; color: #FFFFFF; opacity: 0.85; text-align: center; }
+</style>
+</head>
+<body>
+  <header>
+    <h1>🔥 B&amp;F Bestellmanagement <span class="version" id="version"></span></h1>
+    <div class="mitte">
+      <div class="datetime" id="datetime"></div>
+      <div class="waiting hidden" id="waiting"></div>
+    </div>
+    <div class="status">
+      <span class="conn" id="conn"><span class="dot" id="dot"></span><span id="connText"></span></span>
+    </div>
+  </header>
+
+  <div class="list" id="list">
+    <div class="empty">Warte auf die erste Bestellung…</div>
+  </div>
+
+  <footer>
+    <span class="hint">Taste <b>1–5</b> = Bestellung ausgegeben &nbsp;·&nbsp; Taste <b>0</b> = letzte zurückholen</span>
+    <div class="footer-btns">
+      <button class="undo-btn" id="undoBtn" title="Zuletzt ausgegebene Bestellung zurückholen">&#10226; Undo</button>
+      <button class="undo-btn all-btn" id="doneAllBtn" title="Alle offenen Bestellungen als ausgegeben markieren">&#10003;&#10003; Alle ausgegeben</button>
+    </div>
+  </footer>
+
+<script>
+  const DISPLAY_VERSION = "1.15.0";   // bei jeder Änderung an dieser Datei erhöhen
+  const POLL_MS = 800;   // wie oft beim Server nachgefragt wird
+  let failCount = 0;
+  let currentBons = [];
+
+  function tick() {
+    const now = new Date();
+    const datum = now.toLocaleDateString("de-DE", { weekday: "short", day: "2-digit", month: "2-digit", year: "numeric" });
+    const zeit = now.toLocaleTimeString("de-DE", { hour: "2-digit", minute: "2-digit" });
+    document.getElementById("datetime").textContent = datum + " · " + zeit + " Uhr";
+  }
+  tick();
+  setInterval(tick, 5000);
+  document.getElementById("version").textContent = "v" + DISPLAY_VERSION;
+
+  const VISIBLE = 5;   // so viele Bestellungen passen auf den Bildschirm
+
+  // Kurznamen nur für die Anzeige – in Kasse, Verlauf und CSV bleiben die vollen Namen
+  const KURZNAMEN = {
+    "Hähnchenbrustfilet": "Hähnchen-Brust",
+    "Weißwurst mit Brezel": "Weißwurst",
+    "Schweinenackensteak": "Schweinsteak",
+    "Thüringer Bratwurst": "Thüringer",
+    "Männergedeck mit Chip": "Männergedeck",
+    "Kinder Hotdog": "Kinder-Hotdog",
+  };
+  function kurz(name) { return KURZNAMEN[name] || name; }
+
+  // Verbindungsanzeige mit Klartext-Erklärung
+  function setVerbindung(ok) {
+    const conn = document.getElementById("conn");
+    const dot = document.getElementById("dot");
+    const text = document.getElementById("connText");
+    dot.classList.toggle("offline", !ok);
+    conn.classList.toggle("online", ok);
+    conn.classList.toggle("offline", !ok);
+    text.textContent = ok ? "Verbunden – Bestellungen kommen an" : "Keine Verbindung – Kasse prüfen!";
+  }
+  setVerbindung(true);
+
+  function render(allBons) {
+    const list = document.getElementById("list");
+    const waitingEl = document.getElementById("waiting");
+
+    // Es werden immer die ÄLTESTEN offenen Bestellungen gezeigt – neuere warten in der Schlange.
+    // Anzeige dann so, dass die neueste davon links steht und die älteste ganz rechts (Nr. 1).
+    const sorted = (allBons || []).slice().sort((a, b) => new Date(a.ts) - new Date(b.ts));
+    const bons = sorted.slice(0, VISIBLE).reverse();
+
+    // Bezahlte, aber noch nicht sichtbare Bestellungen anzeigen
+    const waiting = sorted.length - bons.length;
+    if (waiting > 0) {
+      waitingEl.textContent = "+" + waiting + " noch in der Schlange";
+      waitingEl.classList.remove("hidden");
+    } else {
+      waitingEl.classList.add("hidden");
+    }
+
+    // Leerzustand
+    const emptyEl = list.querySelector(".empty");
+    if (bons.length === 0) {
+      list.querySelectorAll(".bon").forEach((el) => el.remove());
+      if (!emptyEl) list.innerHTML = '<div class="empty">Warte auf die erste Bestellung…</div>';
+      return;
+    }
+    if (emptyEl) emptyEl.remove();
+
+    const wanted = new Set(bons.map((b) => b.id));
+
+    // 1) Karten entfernen, die nicht mehr angezeigt werden
+    list.querySelectorAll(".bon").forEach((el) => {
+      if (!wanted.has(el.getAttribute("data-id"))) el.remove();
+    });
+
+    // 2) Vorhandene aktualisieren, neue anlegen — ohne die übrigen anzufassen
+    bons.forEach((b, idx) => {
+      const done = isDone(b);
+      let el = list.querySelector('.bon[data-id="' + cssEscape(b.id) + '"]');
+
+      if (!el) {
+        el = document.createElement("div");
+        el.className = "bon row-enter";
+        el.setAttribute("data-id", b.id);
+        const time = new Date(b.ts).toLocaleTimeString("de-DE", { hour: "2-digit", minute: "2-digit" });
+        const items = b.items.map((i) =>
+          '<span class="bon-item"><span class="bon-qty">' + i.qty + '&times;</span>' + escapeHtml(kurz(i.name)) + '</span>'
+        ).join("");
+        el.innerHTML = '<div class="pos-nr"></div>' +
+                       '<div class="bon-card">' +
+                         '<div class="done-badge">&check;</div>' +
+                         '<div class="bon-time">' + time + '</div>' +
+                         '<div class="bon-items">' + items + '</div>' +
+                       '</div>';
+        list.appendChild(el);
+        // Animationsklasse nach dem Abspielen entfernen -> läuft garantiert nur einmal
+        el.addEventListener("animationend", () => el.classList.remove("row-enter"), { once: true });
+      }
+
+      // Feste Slot-Position: rechtsbündig, damit die älteste Bestellung immer ganz rechts steht
+      const slot = (VISIBLE - bons.length) + idx;
+      el.style.setProperty("--slot", slot);
+
+      // Zustandsklasse nur bei tatsächlicher Änderung setzen
+      el.classList.toggle("done", done);
+
+      // Positionsnummer über der Karte: rechts = 1, nach links aufsteigend
+      const nrEl = el.querySelector(".pos-nr");
+      const wantNr = String(bons.length - idx);
+      if (nrEl.textContent !== wantNr) nrEl.textContent = wantNr;
+      el.dataset.nr = wantNr;   // damit die Tastatur die richtige Karte findet
+    });
+  }
+
+  // Maskiert Sonderzeichen für die Verwendung in einem CSS-Selektor
+  function cssEscape(s) {
+    return String(s).replace(/["\\]/g, "\\$&");
+  }
+
+  // Lokal gemerkte Abhak-Klicks, damit die Anzeige sofort reagiert (ohne auf den Server zu warten)
+  const pendingDone = new Set();
+  function isDone(b) { return b.done || pendingDone.has(b.id); }
+
+  function markDone(id) {
+    if (!id || pendingDone.has(id)) return;
+    pendingDone.add(id);
+    render(currentBons);
+    fetch("/api/bon/done", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ id: id }),
+    }).then(() => {
+      setTimeout(poll, 450);   // kurz nach Ablauf der Anzeigedauer aktualisieren
+    }).catch(() => {
+      pendingDone.delete(id); // Server nicht erreichbar -> Markierung zurücknehmen
+      render(currentBons);
+    });
+  }
+
+  document.getElementById("list").addEventListener("click", (e) => {
+    const card = e.target.closest(".bon");
+    if (card) markDone(card.getAttribute("data-id"));
+  });
+
+  // Zuletzt ausgegebene Bestellung zurückholen
+  function undo() {
+    fetch("/api/undo", { method: "POST" })
+      .then((r) => r.json())
+      .then((data) => {
+        if (data && data.ok) {
+          pendingDone.clear();          // sonst gilt der Bon lokal weiter als ausgegeben
+          const btn = document.getElementById("undoBtn");
+          btn.classList.add("flash");
+          setTimeout(() => btn.classList.remove("flash"), 400);
+          poll();                        // sofort aktualisieren statt aufs nächste Intervall zu warten
+        }
+      })
+      .catch(() => {});
+  }
+
+  document.getElementById("undoBtn").addEventListener("click", undo);
+
+  // Alle offenen Bestellungen auf einmal abhaken (mit Rückfrage, damit es nicht versehentlich passiert)
+  document.getElementById("doneAllBtn").addEventListener("click", () => {
+    const offen = currentBons.filter((b) => !isDone(b)).length;
+    if (offen === 0) return;
+    if (!window.confirm(offen + " offene Bestellung" + (offen === 1 ? "" : "en") + " wirklich alle als ausgegeben markieren?")) return;
+    fetch("/api/done-all", { method: "POST" })
+      .then((r) => r.json())
+      .then(() => { pendingDone.clear(); poll(); })
+      .catch(() => {});
+  });
+
+  // Tastatur / Nummernblock: 1–5 haken die Bestellung an der jeweiligen Position ab
+  document.addEventListener("keydown", (e) => {
+    if (e.key === "0" || e.key.toLowerCase() === "u") { undo(); return; }  // 0 oder U = Rückgängig
+    const n = parseInt(e.key, 10);
+    if (!Number.isFinite(n) || n < 1 || n > VISIBLE) return;
+    const card = document.querySelector('#list .bon[data-nr="' + n + '"]');
+    if (card) markDone(card.getAttribute("data-id"));
+  });
+
+  function escapeHtml(s) {
+    return String(s).replace(/[&<>"']/g, (c) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" }[c]));
+  }
+
+  async function poll() {
+    try {
+      const res = await fetch("/api/bons", { cache: "no-store" });
+      const data = await res.json();
+      failCount = 0;
+      setVerbindung(true);
+      currentBons = data.bons;
+      // Aufräumen: Bons, die der Server nicht mehr kennt, aus der lokalen Merkliste entfernen
+      const serverIds = new Set(currentBons.map((b) => b.id));
+      pendingDone.forEach((id) => { if (!serverIds.has(id)) pendingDone.delete(id); });
+
+      render(currentBons);
+    } catch (e) {
+      failCount++;
+      if (failCount > 2) setVerbindung(false);
+    }
+  }
+
+  poll();
+  setInterval(poll, POLL_MS);
+</script>
+</body>
+</html>
