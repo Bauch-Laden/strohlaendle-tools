@@ -303,8 +303,14 @@
     { id: "maennergedeck", name: "Männergedeck mit Chip", price: 10, description: "Weißwurst mit Brezel + 1/2 Lt Hefeweizen", wide: true },
   ];
 
+  // Diese Produkte enthalten jeweils 1 Brötchen (für die Brötchen-Zählung im Verlauf)
+  const BROETCHEN_PRODUKTE = ["thueringer", "schweinenacken", "haehnchenbrust", "rotewurst", "currywurst", "feuerwurst"];
+  function broetchenAnzahl(products) {
+    return BROETCHEN_PRODUKTE.reduce((summe, id) => summe + ((products || {})[id] || 0), 0);
+  }
+
   const STORAGE_KEY = "bauchladen_history_v1";
-  const SW_VERSION = "2.3.5";
+  const SW_VERSION = "2.5.0";
   const HISTORY_PASSWORD = "447546";
   let order = {}; // { productId: qty } für den aktuellen Bon
   let toastTimer = null;
@@ -475,6 +481,25 @@
     history[dateKey] = day;
     saveHistory(history);
 
+    // Bon ans Team-Display senden (funktioniert nur, wenn die App vom Display-Server
+    // geladen wurde, z. B. am Pi). Fehler werden bewusst ignoriert — die Kasse
+    // funktioniert immer, auch ganz ohne Display/Netzwerk.
+    try {
+      const bonItems = Object.entries(order)
+        .filter(([, q]) => q > 0)
+        .map(([id, q]) => {
+          const p = PRODUCTS.find((x) => x.id === id);
+          return { name: p ? p.name : id, qty: q };
+        });
+      if (bonItems.length > 0 && window.location.protocol.startsWith("http")) {
+        fetch(window.location.origin + "/api/bon", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ ts: new Date().toISOString(), items: bonItems }),
+        }).catch(() => {});
+      }
+    } catch (e) { /* Display optional — niemals die Kasse blockieren */ }
+
     order = {};
     renderOrder();
   }
@@ -550,7 +575,7 @@
             <div class="day-date">${formatDateKey(day.dateKey)}</div>
             <div class="day-revenue">${revenueParts.join(" + ")}</div>
           </div>
-          <div class="day-sub">${day.transactions || 0} ${day.transactions === 1 ? "Bon" : "Bons"}</div>
+          <div class="day-sub">${day.transactions || 0} ${day.transactions === 1 ? "Bon" : "Bons"} · 🥖 ${broetchenAnzahl(day.products)} Brötchen</div>
           <div class="day-items">${itemsHtml}</div>
           ${detailsHtml}
         </div>`;
@@ -812,10 +837,10 @@
 
     // Block 1: Tagesübersicht
     rows.push("TAGESÜBERSICHT");
-    rows.push(["Datum", "Umsatz EUR", "Taler", "Gutschein EUR", "Bons"].concat(PRODUCTS.map((p) => p.name)).map(csvCell).join(";"));
+    rows.push(["Datum", "Umsatz EUR", "Taler", "Gutschein EUR", "Bons", "Brötchen"].concat(PRODUCTS.map((p) => p.name)).map(csvCell).join(";"));
     dayKeys.forEach((k) => {
       const d = normDay(history[k]);
-      const row = [k, csvNum(d.revenue), d.taler, csvNum(d.voucherValue), d.transactions]
+      const row = [k, csvNum(d.revenue), d.taler, csvNum(d.voucherValue), d.transactions, broetchenAnzahl(d.products)]
         .concat(PRODUCTS.map((p) => d.products[p.id] || 0));
       rows.push(row.map(csvCell).join(";"));
     });
