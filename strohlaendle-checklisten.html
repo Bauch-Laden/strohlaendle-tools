@@ -111,6 +111,7 @@
   }
   .brand-tag.bl { background: #FFF1DC; color: #FF9A00; }
   .brand-tag.bf { background: #FBE3E3; color: #C42829; }
+  .hidden { display: none !important; }
 </style>
 </head>
 <body id="body-el">
@@ -123,6 +124,10 @@
     <h1>Für welches Konzept?</h1>
     <div class="brand-choice-card bl" onclick="chooseBrand('bl')">🧡 Bauch-Laden</div>
     <div class="brand-choice-card bf" onclick="chooseBrand('bf')">🔥 Bauch & Flamme</div>
+    <div style="text-align:center; margin-top:22px;">
+      <span onclick="showScreen('screen-backoffice')"
+            style="color:var(--muted); font-size:0.85rem; cursor:pointer; text-decoration:underline;">⚙️ Backoffice</span>
+    </div>
   </section>
 
   <!-- MENU -->
@@ -146,6 +151,42 @@
       <div class="menu-icon">🏁</div>
       <div class="menu-text"><div class="menu-title">Abschluss und Putzen</div><div class="menu-sub">Nach Verkaufsende</div></div>
       <div class="menu-arrow">→</div>
+    </div>
+  </section>
+
+  <!-- BACKOFFICE: Checklisten per CSV aktualisieren -->
+  <section class="screen" id="screen-backoffice">
+    <span class="back-link" onclick="goToBrandChoice()">← Zurück</span>
+    <div class="eyebrow">Backoffice</div>
+    <h1>Checklisten aktualisieren</h1>
+
+    <div id="bo-login">
+      <p style="color:var(--muted); font-size:0.92rem;">Bitte Passwort eingeben.</p>
+      <input type="password" id="bo-pw" inputmode="numeric" placeholder="Passwort"
+             style="width:100%; padding:12px 14px; border:1.5px solid var(--line); border-radius:10px; font-size:1rem; font-family:inherit;">
+      <div id="bo-pw-error" style="color:#C42829; font-size:0.88rem; margin-top:8px;"></div>
+      <button class="btn" onclick="boLogin()" style="width:100%; margin-top:12px;">Anmelden</button>
+    </div>
+
+    <div id="bo-panel" class="hidden">
+      <p style="color:var(--muted); font-size:0.92rem; line-height:1.5;">
+        CSV-Datei wählen oder Inhalt einfügen. Spalten (mit Semikolon getrennt):<br>
+        <strong>Bereich; Unterthema; Bauch-Laden (BL); Bauch &amp; Flamme (BF)</strong><br>
+        In der BF-Spalte bedeutet <strong>Same</strong> „gleicher Text wie BL“ und <strong>N/A</strong> „gilt hier nicht“.
+      </p>
+
+      <input type="file" id="bo-file" accept=".csv,text/csv,text/plain"
+             style="width:100%; margin-bottom:10px; font-size:0.9rem;">
+      <textarea id="bo-text" rows="6" placeholder="…oder CSV-Inhalt hier einfügen"
+                style="width:100%; padding:10px; border:1.5px solid var(--line); border-radius:10px; font-family:monospace; font-size:0.8rem;"></textarea>
+
+      <div id="bo-msg" style="font-size:0.9rem; margin-top:10px;"></div>
+
+      <button class="btn" onclick="boImport()" style="width:100%; margin-top:12px;">Checklisten aktualisieren</button>
+      <button class="btn secondary" onclick="boNeuLaden()" style="width:100%; margin-top:8px;">Vom Repo neu laden</button>
+      <button class="btn secondary" onclick="boReset()" style="width:100%; margin-top:8px;">Auf Grundstand zurücksetzen</button>
+
+      <div id="bo-status" style="margin-top:18px; padding-top:14px; border-top:1px solid var(--line); font-size:0.86rem; color:var(--muted);"></div>
     </div>
   </section>
 
@@ -173,7 +214,8 @@
 </div>
 
 <script>
-  const content = {
+  // Grundstand der Checklisten. Kann im Backoffice per CSV überschrieben werden.
+  const DEFAULT_CONTENT = {
     "bl": {
       "aufbau": {
         "title": "Start & Aufbau-Checkliste",
@@ -187,7 +229,8 @@
               "Schauteller draußen gestellt?",
               "Klappe geöffnet?",
               "Bildschirm richtig positioniert und das Video läuft im loop?",
-              "Mehrfachsteckdose beim Eingang links unten einschalten.",
+              "Kühltheke eingeschaltet?",
+              "Mehrfachsteckdose beim Eingang links über dem Sicherungskasten einschaltet?",
               "Ersatz-Bonrolle in der Nähe vom Drucker (Grillecke + Kassenbereich) positionieren.",
               "Große Mülltüte bei der Grillecke aufhängen.",
               "Kleine Mülltüte unter der Salattheke aufhängen.",
@@ -303,13 +346,17 @@
               "Salat, Teigtasche, Arab. Brot, Fladenbrot Bestellungen aufgegeben? + Hummus Planung für morgen/übermorgen gemacht? Ist übermorgen Sonntag?",
               "Müll entsorgen.",
               "Trinkgeld entleeren und unter den Mitarbeitenden aufteilen.",
+              "Hat Schichtleiter*in morgige Ankunftszeit für die andere Teammitlgieder kommuniziert?",
               "Beleuchtung ausschalten (Bälle-Schalter ist bei der Mehrfachsteckdose links unten am Eingang).",
               "Sind alle Geräte ausgeschaltet?",
+              "Ist die Küche (in der zentralen Hütte) sauber hinterlassen? Spülmachine abgepumpt? Bilder gemacht um Ordnung zu beweisen?",
               "Falls übermorgen Sonntag sein sollte, muss morgen Salate dementsprechend organisiert werden",
               "Truck abschließen, Schlüssel an Orhun übergeben.",
               "Alle Kühlschränke und Kühlwagen funktionieren? Temperaturen beim Kühlwagen unter 8 Grad?",
               "Schmutz-Wäsche wie Schürzen sind an Ayse abgegeben?",
-              "2 IsoBoxen mitgenommen? Für Salate oä?"
+              "2 IsoBoxen mitgenommen? Für Salate oä?",
+              "Hat Orhun die Codes für die Arbeitszeiten verteilt?",
+              "Arbeitsstart-Zeit dokumentiert?"
             ]
           },
           {
@@ -320,12 +367,6 @@
               "Welche besonderen Aspekte sollen wir für die kommenden Tage berücksichtigen?",
               "Gab es besondere Kundenkommentare (positiv oder negativ)?",
               "Welches Essen war zu viel? Welches war zu wenig?"
-            ]
-          },
-          {
-            "label": null,
-            "steps": [
-              "Arbeitsstart-Zeit dokumentiert?"
             ]
           }
         ]
@@ -344,7 +385,11 @@
               "Falls heute Sonntag sein sollte, sonder Tafel (Weißwurst) aufgehängt werden",
               "Verkaufsfenster geöffnet?",
               "Bildschirm richtig positioniert und das Video läuft im loop?",
+              "Alle Bain Maries sind eingeschaltet und deren Wasserstand kontrolliert und nachgefüllt?",
+              "Ketchup, Senf, Mayo, Tabasco  Flaschen sind am Ausgabefenster platziert und sie sind sauber (kein Fett oä)?",
               "Wurden Brote geliefert und in die Hütte gebracht? --> Lieferschein an Orhun geben",
+              "Falls heute Sonntag sein sollte: Petersilie aus dem Kühlwagen bringen",
+              "Falls heute Sonntag sein sollte: Metalbesteck und einen Korb für schmutzigen Bescteck aus der Küche mitbringen",
               "Große Mülltüte aufhängt?",
               "Zusätzliche Mülltüte/Boxen bei Grill/Pommes Ecke gestellt?",
               "Wasserkanister der Handwaschbecken hinten aufgefüllt?",
@@ -422,7 +467,7 @@
             "steps": [
               "Kühlware mit den entsprechenden Deckeln verschließen und in den Kühlschrank stellen.",
               "Vorderseite/Kundenseite der Hütte putzen.",
-              "Ketchup, Senf usw in den Kühlwagen platzieren",
+              "Ketchup, Senf, Mayo, Tabasco Flaschen sind geputzt und in den Kühlwagen platziert?",
               "Bildschirm ausschalten und richtig positionieren.",
               "(Siehe separate Putz-Guideline für Details.)",
               "Fenstern bzw Klappe schließen",
@@ -433,14 +478,20 @@
               "Brötchen und Kinderhotdog Brote bestellt? Falls übermorgen Sonntag sein sollte, muss morgen noch Petersilie oä organisiert werden",
               "Müll entsorgen.",
               "Trinkgeld entleeren und unter den Mitarbeitenden aufteilen.",
+              "Nur für Samstags: Kochtopf, Glühweinkocher und andere Bainmaries für Weißwurst mit Wasser gefüllt, positioniert und ready für den Sonntag?",
+              "Hat Schichtleiter*in morgige Ankunftszeit für die andere Teammitlgieder kommuniziert?",
+              "Nur für Samstags: Orhun und Tony sollen kurz den morgigen Abholungsplan absprechen",
               "Beleuchtung ausschalten",
               "Sind alle Geräte ausgeschaltet?",
+              "Ist die Küche (in der zentralen Hütte) sauber hinterlassen? Spülmachine abgepumpt? Bilder gemacht um Ordnung zu beweisen?",
               "Energie-Speicher ist zum Laden angeschlossen?",
               "Falls übermorgen Sonntag sein sollte, muss morgen noch Petersilie oä organisiert werden",
               "Hütte abschließen, Schlüssel an Orhun übergeben.",
               "Alle Kühlschränke und Kühlwagen funktionieren? Temperaturen beim Kühlwagen unter 8 Grad?",
               "Schmutz-Wäsche wie Schürzen sind an Ayse abgegeben?",
-              "2 IsoBoxen mitgenommen? Für Salate oä?"
+              "2 IsoBoxen mitgenommen? Für Salate oä?",
+              "Hat Orhun die Codes für die Arbeitszeiten verteilt?",
+              "Arbeitsstart-Zeit dokumentiert?"
             ]
           },
           {
@@ -452,17 +503,208 @@
               "Gab es besondere Kundenkommentare (positiv oder negativ)?",
               "Welches Essen war zu viel? Welches war zu wenig?"
             ]
-          },
-          {
-            "label": null,
-            "steps": [
-              "Arbeitsstart-Zeit dokumentiert?"
-            ]
           }
         ]
       }
     }
   };
+  let content = DEFAULT_CONTENT;
+
+
+  // ====================== BACKOFFICE: CSV-Import ======================
+  const BO_PASSWORT = "111222";
+  // Zentrale CSV im Repo – wird beim Öffnen automatisch geladen, damit alle denselben Stand sehen
+  const CSV_URL = "https://raw.githubusercontent.com/Bauch-Laden/strohlaendle-tools/main/checklisten.csv";
+  const BO_SPEICHER = "bl_checklisten_csv_v1";
+
+  const BEREICHE = [
+    { key: "aufbau",    name: "Start & Aufbau",       title: "Start & Aufbau-Checkliste", eyebrow: "Vor Verkaufsstart" },
+    { key: "ablauf",    name: "Ablauf & Tipps",       title: "Ablauf & Tipps",            eyebrow: "Während der Schicht – zum Nachlesen" },
+    { key: "abschluss", name: "Abschluss und Putzen", title: "Abschluss und Putzen",      eyebrow: "Nach Verkaufsende" },
+  ];
+
+  // Zerlegt eine CSV-Zeile und beachtet Anführungszeichen
+  function csvZeile(zeile) {
+    const felder = [];
+    let feld = "", inAnf = false;
+    for (let i = 0; i < zeile.length; i++) {
+      const z = zeile[i];
+      if (z === '"') {
+        if (inAnf && zeile[i + 1] === '"') { feld += '"'; i++; }
+        else inAnf = !inAnf;
+      } else if (z === ";" && !inAnf) {
+        felder.push(feld); feld = "";
+      } else feld += z;
+    }
+    felder.push(feld);
+    return felder;
+  }
+
+  // Baut aus dem CSV-Text die Inhalte für beide Konzepte
+  function csvVerarbeiten(text) {
+    const zeilen = text.split(/\r?\n/).filter(z => z.trim().length > 0);
+    if (zeilen.length < 2) throw new Error("Die Datei enthält keine Daten.");
+
+    // Kopfzeilen überspringen (sowohl "Column1;…" als auch "Bereich;…")
+    let start = 0;
+    for (let i = 0; i < Math.min(3, zeilen.length); i++) {
+      const erste = csvZeile(zeilen[i])[0].trim().toLowerCase();
+      if (erste === "column1" || erste === "bereich") start = i + 1;
+    }
+
+    const blItems = [], bfItems = [];
+    let gueltig = 0;
+    for (let i = start; i < zeilen.length; i++) {
+      const f = csvZeile(zeilen[i]).map(s => s.trim());
+      if (f.length < 4 || !f[0]) continue;
+      const [bereich, unter, bl, bf] = f;
+      gueltig++;
+      if (bl && bl.toUpperCase() !== "N/A") blItems.push([bereich, unter, bl]);
+      if (bf.toUpperCase() === "N/A") { /* übersprungen */ }
+      else if (bf.toLowerCase() === "same") {
+        if (bl && bl.toUpperCase() !== "N/A") bfItems.push([bereich, unter, bl]);
+      } else if (bf) bfItems.push([bereich, unter, bf]);
+    }
+    if (gueltig === 0) throw new Error("Keine gültigen Zeilen gefunden. Sind die Spalten mit Semikolon getrennt?");
+
+    function bauen(items, bereichName, title, eyebrow) {
+      const gefiltert = items.filter(it => it[0] === bereichName);
+      const sections = [];
+      let aktLabel = null, aktSteps = null, ersteRunde = true;
+      gefiltert.forEach(([, unter, text]) => {
+        const label = unter || null;
+        if (ersteRunde || label !== aktLabel) {
+          aktSteps = [];
+          sections.push({ label: label, steps: aktSteps });
+          aktLabel = label; ersteRunde = false;
+        }
+        aktSteps.push(text);
+      });
+      return { title: title, eyebrow: eyebrow, sections: sections };
+    }
+
+    const neu = { bl: {}, bf: {} };
+    BEREICHE.forEach(b => {
+      neu.bl[b.key] = bauen(blItems, b.name, b.title, b.eyebrow);
+      neu.bf[b.key] = bauen(bfItems, b.name, b.title, b.eyebrow);
+    });
+
+    const summe = ["bl","bf"].reduce((s, m) => s + BEREICHE.reduce((t, b) =>
+      t + neu[m][b.key].sections.reduce((x, sec) => x + sec.steps.length, 0), 0), 0);
+    if (summe === 0) throw new Error("Es wurden keine Punkte erkannt. Stimmen die Bereichsnamen?");
+
+    return neu;
+  }
+
+  function boLogin() {
+    const eingabe = document.getElementById("bo-pw").value.trim();
+    const fehler = document.getElementById("bo-pw-error");
+    if (eingabe !== BO_PASSWORT) { fehler.textContent = "Passwort stimmt nicht."; return; }
+    fehler.textContent = "";
+    document.getElementById("bo-login").classList.add("hidden");
+    document.getElementById("bo-panel").classList.remove("hidden");
+    boStatusAnzeigen();
+  }
+
+  function boStatusAnzeigen() {
+    const gespeichert = localStorage.getItem(BO_SPEICHER);
+    const el = document.getElementById("bo-status");
+    if (!gespeichert) { el.textContent = "Aktuell aktiv: Grundstand (in der Datei hinterlegt)."; return; }
+    try {
+      const daten = JSON.parse(gespeichert);
+      const anzahl = ["bl","bf"].map(m => BEREICHE.reduce((t, b) =>
+        t + (daten.content[m][b.key].sections || []).reduce((x, s) => x + s.steps.length, 0), 0));
+      const quelle = daten.quelle === "repo" ? "zentrale CSV aus dem Repo" : "manuell importierte CSV";
+      el.innerHTML = "Aktuell aktiv: " + quelle + " vom <strong>" +
+        new Date(daten.datum).toLocaleString("de-DE") + "</strong><br>" +
+        "Bauch-Laden: " + anzahl[0] + " Punkte · Bauch &amp; Flamme: " + anzahl[1] + " Punkte";
+    } catch (e) { el.textContent = "Importierte Daten vorhanden."; }
+  }
+
+  function boAnwenden(text) {
+    const msg = document.getElementById("bo-msg");
+    try {
+      const neu = csvVerarbeiten(text);
+      localStorage.setItem(BO_SPEICHER, JSON.stringify({ datum: new Date().toISOString(), content: neu }));
+      content = neu;
+      const z = ["bl","bf"].map(m => BEREICHE.reduce((t, b) =>
+        t + neu[m][b.key].sections.reduce((x, s) => x + s.steps.length, 0), 0));
+      msg.innerHTML = '<span style="color:#3C8A5B;">✅ Aktualisiert: Bauch-Laden ' + z[0] +
+                      ' Punkte, Bauch &amp; Flamme ' + z[1] + " Punkte.</span>";
+      boStatusAnzeigen();
+    } catch (e) {
+      msg.innerHTML = '<span style="color:#C42829;">⚠️ ' + e.message + "</span>";
+    }
+  }
+
+  function boImport() {
+    const datei = document.getElementById("bo-file").files[0];
+    const text = document.getElementById("bo-text").value.trim();
+    const msg = document.getElementById("bo-msg");
+    if (datei) {
+      const leser = new FileReader();
+      leser.onload = () => boAnwenden(leser.result);
+      leser.onerror = () => { msg.innerHTML = '<span style="color:#C42829;">⚠️ Datei konnte nicht gelesen werden.</span>'; };
+      leser.readAsText(datei, "utf-8");
+    } else if (text) {
+      boAnwenden(text);
+    } else {
+      msg.innerHTML = '<span style="color:#C42829;">⚠️ Bitte Datei wählen oder Text einfügen.</span>';
+    }
+  }
+
+  function boNeuLaden() {
+    const msg = document.getElementById("bo-msg");
+    msg.textContent = "Lade…";
+    zentraleCsvLaden().then(ok => {
+      if (ok) {
+        const z = ["bl","bf"].map(m => BEREICHE.reduce((t, b) =>
+          t + content[m][b.key].sections.reduce((x, s) => x + s.steps.length, 0), 0));
+        msg.innerHTML = '<span style="color:#3C8A5B;">✅ Vom Repo geladen: Bauch-Laden ' + z[0] +
+                        ' Punkte, Bauch &amp; Flamme ' + z[1] + " Punkte.</span>";
+      } else {
+        msg.innerHTML = '<span style="color:#C42829;">⚠️ Konnte nicht geladen werden (kein Netz oder Datei fehlt im Repo).</span>';
+      }
+      boStatusAnzeigen();
+    });
+  }
+
+  function boReset() {
+    if (!window.confirm("Wirklich auf den in der Datei hinterlegten Grundstand zurücksetzen?")) return;
+    localStorage.removeItem(BO_SPEICHER);
+    content = DEFAULT_CONTENT;
+    document.getElementById("bo-msg").innerHTML = '<span style="color:#3C8A5B;">✅ Grundstand wiederhergestellt.</span>';
+    boStatusAnzeigen();
+  }
+
+  // Beim Laden: zuletzt gespeicherten Stand verwenden (funktioniert auch offline)
+  (function () {
+    try {
+      const gespeichert = localStorage.getItem(BO_SPEICHER);
+      if (gespeichert) {
+        const daten = JSON.parse(gespeichert);
+        if (daten && daten.content && daten.content.bl && daten.content.bf) content = daten.content;
+      }
+    } catch (e) { /* bei Problemen bleibt der Grundstand aktiv */ }
+  })();
+
+  // Zentrale CSV aus dem Repo nachladen, damit alle Geräte denselben Stand bekommen.
+  // Schlägt es fehl (kein Netz), bleibt der zuletzt gespeicherte Stand aktiv.
+  function zentraleCsvLaden() {
+    return fetch(CSV_URL + "?t=" + Date.now(), { cache: "no-store" })
+      .then(r => { if (!r.ok) throw new Error("HTTP " + r.status); return r.text(); })
+      .then(text => {
+        const neu = csvVerarbeiten(text);
+        content = neu;
+        localStorage.setItem(BO_SPEICHER, JSON.stringify({
+          datum: new Date().toISOString(), quelle: "repo", content: neu
+        }));
+        return true;
+      })
+      .catch(() => false);
+  }
+
+  zentraleCsvLaden();
 
   let currentBrand = null;
   let currentChecked = [];
