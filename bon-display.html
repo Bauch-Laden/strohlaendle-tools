@@ -84,7 +84,7 @@
 
   /* Große, mittige Positionsnummer über der Box */
   .pos-nr {
-    text-align: center; font-size: 6vh; font-weight: 800; line-height: 1;
+    text-align: center; font-size: 5vh; font-weight: 800; line-height: 1;
     color: #FFFFFF; opacity: 0.9; letter-spacing: -0.02em;
   }
   .bon.done .pos-nr { color: var(--sage); opacity: 0.8; }
@@ -93,7 +93,7 @@
   .bon-card {
     background: var(--panel); border: 2px solid var(--panel-border); border-radius: 1.6vh;
     padding: 2vh 1.2vw; display: flex; flex-direction: column; gap: 1.2vh;
-    height: 32vh; overflow: hidden; position: relative;
+    height: 40vh; overflow: hidden; position: relative;
   }
 
   /* Ausgegeben: abgehakt, ausgegraut, verschwindet nach kurzer Zeit von selbst */
@@ -142,7 +142,7 @@
   </footer>
 
 <script>
-  const DISPLAY_VERSION = "1.15.0";   // bei jeder Änderung an dieser Datei erhöhen
+  const DISPLAY_VERSION = "1.16.0";   // bei jeder Änderung an dieser Datei erhöhen
   const POLL_MS = 800;   // wie oft beim Server nachgefragt wird
   let failCount = 0;
   let currentBons = [];

@@ -1,0 +1,129 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Bauch &amp; Flamme – Tagesübersicht</title>
+<style>
+  :root {
+    --bg: #1F2A24; --panel: #26332C; --panel-border: #35463C;
+    --chalk: #F5F1E6; --chalk-muted: #A9B3A6; --mustard: #E8A33D; --sage: #7FA875;
+  }
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body {
+    background: var(--bg); color: var(--chalk); min-height: 100vh; padding: 18px;
+    font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+  }
+  header { margin-bottom: 16px; }
+  h1 { font-size: 20px; letter-spacing: 0.04em; }
+  .stand { font-size: 13px; color: var(--chalk-muted); margin-top: 4px; }
+
+  .tag { background: var(--panel); border: 1px solid var(--panel-border); border-radius: 14px; padding: 16px; margin-bottom: 14px; }
+  .tag-kopf { display: flex; justify-content: space-between; align-items: baseline; gap: 10px; margin-bottom: 4px; }
+  .datum { font-weight: 700; font-size: 16px; }
+  .umsatz { font-weight: 800; font-size: 19px; color: var(--mustard); text-align: right; }
+  .sub { font-size: 13px; color: var(--chalk-muted); margin-bottom: 12px; }
+
+  .zeile { display: flex; justify-content: space-between; padding: 5px 0; font-size: 14px; border-top: 1px solid rgba(255,255,255,0.06); }
+  .zeile .name { color: var(--chalk-muted); }
+  .zeile .wert { font-weight: 700; }
+
+  .aktualisieren {
+    width: 100%; padding: 13px; margin-bottom: 16px; border-radius: 10px; cursor: pointer;
+    background: var(--sage); color: #16241A; border: none; font-size: 15px; font-weight: 700; font-family: inherit;
+  }
+  .hinweis { color: var(--chalk-muted); font-size: 14px; text-align: center; padding: 30px 10px; line-height: 1.5; }
+</style>
+</head>
+<body>
+  <header>
+    <h1>🔥 Bauch &amp; Flamme – Tagesübersicht</h1>
+    <div class="stand" id="stand">Lade…</div>
+  </header>
+
+  <button class="aktualisieren" onclick="laden()">↻ Aktualisieren</button>
+  <div id="inhalt"></div>
+
+<script>
+  const BROETCHEN = ["thueringer", "schweinenacken", "haehnchenbrust", "rotewurst", "currywurst", "feuerwurst"];
+
+  const NAMEN = {
+    pommes: "Pommes", wedges: "Wedges", currywurst: "Currywurst",
+    currywurstpommes: "Currywurst mit Pommes", rotewurst: "Rote Wurst",
+    kinderhotdog: "Kinder Hotdog", feuerwurst: "Feuerwurst",
+    thueringer: "Thüringer Bratwurst", schweinenacken: "Schweinenackensteak",
+    haehnchenbrust: "Hähnchenbrustfilet", weisswurstbrezel: "Weißwurst mit Brezel",
+    maennergedeck: "Männergedeck mit Chip",
+  };
+
+  const eur = (n) => (n || 0).toFixed(2).replace(".", ",") + " €";
+
+  function datumLesbar(schluessel) {
+    const [j, m, t] = schluessel.split("-");
+    return new Date(j, m - 1, t).toLocaleDateString("de-DE",
+      { weekday: "short", day: "2-digit", month: "2-digit", year: "numeric" });
+  }
+
+  function zeichnen(daten) {
+    const verlauf = daten.history || {};
+    const tage = Object.keys(verlauf).filter(k => /^\d{4}-\d{2}-\d{2}$/.test(k)).sort().reverse();
+    const inhalt = document.getElementById("inhalt");
+
+    document.getElementById("stand").textContent =
+      "Stand: " + new Date(daten.gesichertAm).toLocaleString("de-DE") +
+      " · Kasse v" + (daten.version || "?");
+
+    if (tage.length === 0) {
+      inhalt.innerHTML = '<div class="hinweis">Noch keine Daten vorhanden.</div>';
+      return;
+    }
+
+    inhalt.innerHTML = tage.map(k => {
+      const d = verlauf[k] || {};
+      const produkte = d.products || {};
+      const broetchen = BROETCHEN.reduce((s, id) => s + (produkte[id] || 0), 0);
+
+      let summe = [eur(d.revenue)];
+      if (d.taler > 0) summe.push(d.taler + " Taler");
+      if (d.voucherValue > 0) summe.push(eur(d.voucherValue) + " Gutschein");
+
+      const zeilen = Object.keys(NAMEN)
+        .filter(id => produkte[id])
+        .map(id => '<div class="zeile"><span class="name">' + NAMEN[id] +
+                   '</span><span class="wert">' + produkte[id] + '×</span></div>')
+        .join("");
+
+      return '<div class="tag">' +
+               '<div class="tag-kopf"><span class="datum">' + datumLesbar(k) + '</span>' +
+               '<span class="umsatz">' + summe.join("<br>") + '</span></div>' +
+               '<div class="sub">' + (d.transactions || 0) + ' Bons · 🥖 ' + broetchen + ' Brötchen</div>' +
+               zeilen +
+             '</div>';
+    }).join("");
+  }
+
+  function laden() {
+    document.getElementById("stand").textContent = "Lade…";
+    fetch("/api/backup?t=" + Date.now(), { cache: "no-store" })
+      .then(r => r.json())
+      .then(a => {
+        if (a.ok) zeichnen(a.daten);
+        else {
+          document.getElementById("stand").textContent = "Keine Sicherung vorhanden";
+          document.getElementById("inhalt").innerHTML =
+            '<div class="hinweis">Noch keine Sicherung auf dem Pi.<br>' +
+            'Die Kasse sichert automatisch alle 10 Minuten.</div>';
+        }
+      })
+      .catch(() => {
+        document.getElementById("stand").textContent = "Keine Verbindung zum Pi";
+        document.getElementById("inhalt").innerHTML =
+          '<div class="hinweis">Bitte prüfen, ob das Gerät im WLAN „BF-Kasse" ist.</div>';
+      });
+  }
+
+  laden();
+  setInterval(laden, 60000);   // jede Minute von selbst aktualisieren
+</script>
+</body>
+</html>

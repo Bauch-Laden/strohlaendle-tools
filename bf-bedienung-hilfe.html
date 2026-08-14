@@ -219,6 +219,17 @@
     </div>
   </div>
 
+  <!-- CHIP-WARNUNG (Männergedeck) -->
+  <div id="chipModal" class="modal-overlay hidden">
+    <div class="modal-box" style="border-color: var(--mustard);">
+      <div class="modal-title" style="font-size: 22px;">🍺 Bierchips nicht vergessen!</div>
+      <div class="modal-note" id="chipText" style="font-size: 15px; margin-top: 10px;"></div>
+      <div class="modal-actions">
+        <button class="modal-btn modal-btn-ok btn-tap" id="chipOkBtn" style="width:100%;">Chips gegeben ✓</button>
+      </div>
+    </div>
+  </div>
+
   <!-- STROHTALER-MODAL -->
   <div id="talerModal" class="modal-overlay hidden">
     <div class="modal-box">
@@ -292,15 +303,16 @@
   const PRODUCTS = [
     { id: "pommes", name: "Pommes", price: 4 },
     { id: "wedges", name: "Wedges", price: 5 },
-    { id: "kinderhotdog", name: "Kinder Hotdog", price: 4 },
+    { id: "currywurst", name: "Currywurst", price: 6 },
+    { id: "currywurstpommes", name: "Currywurst mit Pommes", displayName: "Currywurst<br>mit Pommes", price: 8 },
     { id: "rotewurst", name: "Rote Wurst", price: 5 },
-    { id: "thueringer", name: "Thüringer Bratwurst", price: 7 },
-    { id: "currywurst", name: "Currywurst", price: 7 },
+    { id: "kinderhotdog", name: "Kinder Hotdog", price: 4 },
+    { id: "feuerwurst", name: "Feuerwurst", price: 8 },
+    { id: "thueringer", name: "Thüringer Bratwurst", displayName: "Thüringer<br>Bratwurst", price: 7 },
     { id: "schweinenacken", name: "Schweinenackensteak", displayName: "Schwein N.<br>Steak", price: 8 },
     { id: "haehnchenbrust", name: "Hähnchenbrustfilet", displayName: "Hähnchen<br>Br. Filet", price: 8 },
-    { id: "feuerwurst", name: "Feuerwurst", price: 8 },
-    { id: "weisswurstbrezel", name: "Weißwurst mit Brezel", price: 7 },
-    { id: "maennergedeck", name: "Männergedeck mit Chip", price: 10, description: "Weißwurst mit Brezel + 1/2 Lt Hefeweizen", wide: true },
+    { id: "weisswurstbrezel", name: "Weißwurst mit Brezel", displayName: "Weißwurst<br>mit Brezel", price: 7 },
+    { id: "maennergedeck", name: "Männergedeck mit Chip", displayName: "Männergedeck<br>mit Chip", price: 10 },
   ];
 
   // Diese Produkte enthalten jeweils 1 Brötchen (für die Brötchen-Zählung im Verlauf)
@@ -310,7 +322,7 @@
   }
 
   const STORAGE_KEY = "bauchladen_history_v1";
-  const SW_VERSION = "2.5.0";
+  const SW_VERSION = "2.7.0";
   const HISTORY_PASSWORD = "447546";
   let order = {}; // { productId: qty } für den aktuellen Bon
   let toastTimer = null;
@@ -465,6 +477,29 @@
     return { totalItems, totalPrice };
   }
 
+  // ---------- Automatische Sicherung an den Raspberry Pi ----------
+  // Zusätzlich zur lokalen Speicherung: Die Kasse funktioniert auch ohne Pi vollständig.
+  const BACKUP_INTERVALL_MS = 10 * 60 * 1000;   // alle 10 Minuten
+
+  function sicherungSenden() {
+    try {
+      if (location.protocol !== "http:") return;   // von GitHub Pages aus nicht möglich
+      const history = loadHistory();
+      if (!history || Object.keys(history).length === 0) return;
+      fetch("/api/backup", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          app: "bf-bedienung-hilfe",
+          version: SW_VERSION,
+          gesichertAm: new Date().toISOString(),
+          history: history,
+        }),
+        keepalive: true,
+      }).catch(() => {});
+    } catch (e) { /* Sicherung ist optional – niemals die Kasse stören */ }
+  }
+
   // Gemeinsame Buchungsfunktion für alle Zahlungsarten
   function saveBon({ eurAmount, talerAmount = 0, voucherAmount = 0, special = null }) {
     const history = loadHistory();
@@ -525,6 +560,27 @@
     saveBon({ eurAmount: totalPrice });
     showToast("Bon gespeichert ✓");
   }
+
+  // ---------- Chip-Warnung beim Männergedeck ----------
+  // Merkt sich die auszuführende Buchung, bis die Chips bestätigt wurden
+  let chipWartet = null;
+
+  function mitChipPruefung(buchung) {
+    const anzahl = order["maennergedeck"] || 0;
+    if (anzahl > 0) {
+      document.getElementById("chipText").textContent =
+        anzahl + "x Männergedeck – bitte " + anzahl + " Bierchip" + (anzahl === 1 ? "" : "s") + " mitgeben.";
+      chipWartet = buchung;
+      document.getElementById("chipModal").classList.remove("hidden");
+    } else {
+      buchung();
+    }
+  }
+
+  document.getElementById("chipOkBtn").addEventListener("click", () => {
+    document.getElementById("chipModal").classList.add("hidden");
+    if (chipWartet) { const b = chipWartet; chipWartet = null; b(); }
+  });
 
   function renderHistory() {
     const history = loadHistory();
@@ -632,7 +688,7 @@
     document.getElementById("orderView").classList.remove("hidden");
   });
 
-  document.getElementById("nextCustomerBtn").addEventListener("click", nextCustomer);
+  document.getElementById("nextCustomerBtn").addEventListener("click", () => mitChipPruefung(nextCustomer));
 
   // ---------- STROHTALER ----------
   function openTalerModal() {
@@ -661,8 +717,10 @@
     }
     const eurRest = totalPrice - taler;
     document.getElementById("talerModal").classList.add("hidden");
-    saveBon({ eurAmount: eurRest, talerAmount: taler });
-    showToast(`Bon gespeichert ✓ (${taler} Taler${eurRest > 0 ? " + " + formatEUR(eurRest) : ""})`);
+    mitChipPruefung(() => {
+      saveBon({ eurAmount: eurRest, talerAmount: taler });
+      showToast(`Bon gespeichert ✓ (${taler} Taler${eurRest > 0 ? " + " + formatEUR(eurRest) : ""})`);
+    });
   }
 
   document.getElementById("talerBtn").addEventListener("click", openTalerModal);
@@ -739,13 +797,15 @@
 
     document.getElementById("rabattModal").classList.add("hidden");
 
-    if (rabattSelection.discount === 50) {
-      saveBon({ eurAmount: totalPrice / 2, special });
-      showToast(`Bon gespeichert ✓ (50 %, ${formatEUR(totalPrice / 2)})`);
-    } else {
-      saveBon({ eurAmount: 0, voucherAmount: totalPrice, special });
-      showToast("Bon gespeichert ✓ (Gutschein)");
-    }
+    mitChipPruefung(() => {
+      if (rabattSelection.discount === 50) {
+        saveBon({ eurAmount: totalPrice / 2, special });
+        showToast(`Bon gespeichert ✓ (50 %, ${formatEUR(totalPrice / 2)})`);
+      } else {
+        saveBon({ eurAmount: 0, voucherAmount: totalPrice, special });
+        showToast("Bon gespeichert ✓ (Gutschein)");
+      }
+    });
   }
 
   document.getElementById("rabattBtn").addEventListener("click", openRabattModal);
@@ -963,6 +1023,10 @@
 
   renderProductList();
   updateTotals();
+
+  // Sicherung: einmal kurz nach dem Start, danach regelmäßig
+  setTimeout(sicherungSenden, 5000);
+  setInterval(sicherungSenden, BACKUP_INTERVALL_MS);
 </script>
 </body>
 </html>

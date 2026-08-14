@@ -9,13 +9,14 @@ const http = require("http");
 const fs = require("fs");
 const path = require("path");
 
-const SERVER_VERSION = "1.6.0";  // bei jeder Änderung an dieser Datei erhöhen
+const SERVER_VERSION = "1.8.0";  // bei jeder Änderung an dieser Datei erhöhen
 const PORT = 3000;
 const DONE_VISIBLE_MS = 400; // wie lange ein abgehakter Bon noch sichtbar bleibt
 const SAFETY_CAP = 300;       // Notbremse gegen unbegrenztes Wachsen (offene Bons)
 const UNDO_HISTORY = 10;      // so viele ausgegebene Bons lassen sich zurückholen
 const PUBLIC_DIR = __dirname;
 const STATE_FILE = path.join(__dirname, "bons.json");
+const BACKUP_DIR = path.join(__dirname, "backups");
 
 // ---------- Zustand (überlebt einen Neustart) ----------
 let bons = [];
@@ -184,6 +185,44 @@ const server = http.createServer((req, res) => {
       console.log(new Date().toLocaleTimeString("de-DE"), "Alle abgehakt:", anzahl, "Bestellungen");
     }
     return sendJson(res, 200, { ok: true, anzahl: anzahl });
+  }
+
+  // --- Sicherungskopie der Kassendaten entgegennehmen ---
+  if (req.method === "POST" && url.pathname === "/api/backup") {
+    let body = "";
+    let tooBig = false;
+    req.on("data", (chunk) => {
+      body += chunk;
+      if (body.length > 5000000) { tooBig = true; req.destroy(); }   // 5 MB Grenze
+    });
+    req.on("end", () => {
+      if (tooBig) return;
+      try {
+        JSON.parse(body);   // nur prüfen, ob es gültiges JSON ist
+        if (!fs.existsSync(BACKUP_DIR)) fs.mkdirSync(BACKUP_DIR);
+        const heute = new Date().toISOString().slice(0, 10);
+        // Eine Datei pro Tag, wird jeweils überschrieben -> immer der neueste Stand
+        fs.writeFileSync(path.join(BACKUP_DIR, "kasse-" + heute + ".json"), body);
+        fs.writeFileSync(path.join(BACKUP_DIR, "kasse-aktuell.json"), body);
+        console.log(new Date().toLocaleTimeString("de-DE"), "Kassen-Sicherung gespeichert (" + Math.round(body.length / 1024) + " KB)");
+        sendJson(res, 200, { ok: true });
+      } catch (e) {
+        sendJson(res, 400, { ok: false, error: "kein gueltiges JSON" });
+      }
+    });
+    return;
+  }
+
+  // --- Letzte Kassen-Sicherung abrufen (für die Übersichtsseite) ---
+  if (req.method === "GET" && url.pathname === "/api/backup") {
+    try {
+      const datei = path.join(BACKUP_DIR, "kasse-aktuell.json");
+      if (!fs.existsSync(datei)) return sendJson(res, 404, { ok: false, error: "noch keine Sicherung vorhanden" });
+      const inhalt = JSON.parse(fs.readFileSync(datei, "utf8"));
+      return sendJson(res, 200, { ok: true, daten: inhalt });
+    } catch (e) {
+      return sendJson(res, 500, { ok: false, error: "Sicherung nicht lesbar" });
+    }
   }
 
   // --- Bons abfragen (vom Display) ---
