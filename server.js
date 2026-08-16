@@ -9,7 +9,7 @@ const http = require("http");
 const fs = require("fs");
 const path = require("path");
 
-const SERVER_VERSION = "1.8.0";  // bei jeder Änderung an dieser Datei erhöhen
+const SERVER_VERSION = "1.9.0";  // bei jeder Änderung an dieser Datei erhöhen
 const PORT = 3000;
 const DONE_VISIBLE_MS = 400; // wie lange ein abgehakter Bon noch sichtbar bleibt
 const SAFETY_CAP = 300;       // Notbremse gegen unbegrenztes Wachsen (offene Bons)
@@ -29,6 +29,12 @@ try {
 } catch (e) {
   console.error("Konnte gespeicherte Bons nicht laden:", e.message);
 }
+// Ältere gespeicherte Bons (vor v1.9.0) kennen "itemsDone" noch nicht -> nachrüsten
+bons.forEach((b) => {
+  if (!Array.isArray(b.itemsDone)) {
+    b.itemsDone = b.items.map((it) => (b.done ? it.qty : 0));
+  }
+});
 
 // Entfernt nur abgehakte Bons, deren Anzeigezeit abgelaufen ist.
 // Offene (bezahlte, aber noch nicht ausgegebene) Bons bleiben IMMER erhalten.
@@ -86,9 +92,15 @@ function sanitizeBon(raw) {
     id: Date.now() + "-" + Math.random().toString(36).slice(2, 7),
     ts: new Date().toISOString(),
     items: items,
+    itemsDone: items.map(() => 0),   // pro Position: wie viele Stück bereits ausgegeben sind
     done: false,
     doneAt: null,
   };
+}
+
+// Prüft, ob für einen Bon alle Positionen vollständig ausgegeben sind
+function alleItemsFertig(bon) {
+  return bon.items.every((it, idx) => (bon.itemsDone[idx] || 0) >= it.qty);
 }
 
 // ---------- Server ----------
@@ -122,6 +134,47 @@ const server = http.createServer((req, res) => {
     return;
   }
 
+  // --- Einzelne Position eines Bons als (teilweise) ausgegeben markieren ---
+  if (req.method === "POST" && url.pathname === "/api/bon/item") {
+    let body = "";
+    let tooBig = false;
+    req.on("data", (chunk) => {
+      body += chunk;
+      if (body.length > 2000) { tooBig = true; req.destroy(); }
+    });
+    req.on("end", () => {
+      if (tooBig) return;
+      try {
+        const { id, index, doneQty } = JSON.parse(body);
+        const bon = bons.find((b) => b.id === id);
+        if (!bon) return sendJson(res, 404, { ok: false, error: "unbekannt" });
+        const item = bon.items[index];
+        if (!item) return sendJson(res, 400, { ok: false, error: "unbekannte Position" });
+
+        const wert = Math.max(0, Math.min(item.qty, Math.round(Number(doneQty))));
+        if (!Number.isFinite(wert)) return sendJson(res, 400, { ok: false, error: "ungueltige Menge" });
+        bon.itemsDone[index] = wert;
+
+        // Sind jetzt alle Positionen fertig, gilt der ganze Bon als ausgegeben
+        if (alleItemsFertig(bon) && !bon.done) {
+          bon.done = true;
+          bon.doneAt = Date.now();
+          console.log(new Date().toLocaleTimeString("de-DE"), "Ausgegeben (alle Positionen):",
+            bon.items.map((i) => i.qty + "x " + i.name).join(", "));
+        } else if (!alleItemsFertig(bon) && bon.done) {
+          // Falls zuvor komplett fertig war und jetzt eine Position zurückgenommen wird
+          bon.done = false;
+          bon.doneAt = null;
+        }
+        persist();
+        sendJson(res, 200, { ok: true, bon: bon });
+      } catch (e) {
+        sendJson(res, 400, { ok: false, error: "kein gueltiges JSON" });
+      }
+    });
+    return;
+  }
+
   // --- Bon als ausgegeben markieren ---
   if (req.method === "POST" && url.pathname === "/api/bon/done") {
     let body = "";
@@ -139,6 +192,7 @@ const server = http.createServer((req, res) => {
         if (!bon.done) {
           bon.done = true;
           bon.doneAt = Date.now();
+          bon.itemsDone = bon.items.map((it) => it.qty);   // alle Positionen als vollständig markieren
           persist();
           console.log(new Date().toLocaleTimeString("de-DE"), "Ausgegeben:",
             bon.items.map((i) => i.qty + "x " + i.name).join(", "));
@@ -159,11 +213,13 @@ const server = http.createServer((req, res) => {
     if (nochSichtbar) {
       nochSichtbar.done = false;
       nochSichtbar.doneAt = null;
+      nochSichtbar.itemsDone = nochSichtbar.items.map(() => 0);
       wieder = nochSichtbar;
     } else if (zuletztAusgegeben.length > 0) {
       wieder = zuletztAusgegeben.shift();
       wieder.done = false;
       wieder.doneAt = null;
+      wieder.itemsDone = wieder.items.map(() => 0);
       bons.unshift(wieder);
     }
     if (!wieder) return sendJson(res, 404, { ok: false, error: "nichts zum Zurueckholen" });
@@ -178,7 +234,12 @@ const server = http.createServer((req, res) => {
     const jetzt = Date.now();
     let anzahl = 0;
     bons.forEach((b) => {
-      if (!b.done) { b.done = true; b.doneAt = jetzt; anzahl++; }
+      if (!b.done) {
+        b.done = true;
+        b.doneAt = jetzt;
+        b.itemsDone = b.items.map((it) => it.qty);
+        anzahl++;
+      }
     });
     if (anzahl > 0) {
       persist();

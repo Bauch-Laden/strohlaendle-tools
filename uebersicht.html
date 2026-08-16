@@ -39,12 +39,16 @@
   <header>
     <h1>🔥 Bauch &amp; Flamme – Tagesübersicht</h1>
     <div class="stand" id="stand">Lade…</div>
+    <div class="stand" style="opacity:0.5;">v<span id="ueVersion"></span></div>
   </header>
 
   <button class="aktualisieren" onclick="laden()">↻ Aktualisieren</button>
   <div id="inhalt"></div>
 
 <script>
+  const UEBERSICHT_VERSION = "1.1.0";   // bei jeder Änderung an dieser Datei erhöhen
+  document.getElementById("ueVersion").textContent = UEBERSICHT_VERSION;
+
   const BROETCHEN = ["thueringer", "schweinenacken", "haehnchenbrust", "rotewurst", "currywurst", "feuerwurst"];
 
   const NAMEN = {

@@ -28,91 +28,112 @@
     -webkit-tap-highlight-color: transparent;
   }
 
-  .hint { font-size: 2.1vh; color: #FFFFFF; opacity: 0.9; }
+  .hint { font-size: 2vh; color: #FFFFFF; opacity: 0.9; }
   .version { font-size: 1.7vh; color: #FFFFFF; opacity: 0.5; font-weight: 400; letter-spacing: 0; margin-left: 0.6vw; }
-  /* Wartende Bestellungen: groß und mittig über den Boxen */
   .waiting { font-size: 4.6vh; font-weight: 800; color: #FFFFFF;
              background: var(--weinrot); border: 2px solid var(--weinrot-hell);
              border-radius: 1.4vh; padding: 0.9vh 2.4vw; white-space: nowrap; margin-top: 1.4vh; }
-  .hidden { display: none; }
-  .undo-btn {
-    font-family: inherit; font-size: 2.2vh; font-weight: 700;
+  .hidden { display: none !important; }
+  .footer-btn {
+    font-family: inherit; font-size: 2vh; font-weight: 700;
     color: #FFFFFF; background: rgba(245,241,230,0.10);
     border: 1px solid var(--panel-border); border-radius: 1vh;
-    padding: 0.7vh 1.2vw; cursor: pointer; transition: background 0.15s, color 0.15s;
+    padding: 0.7vh 1.1vw; cursor: pointer; transition: background 0.15s, color 0.15s;
   }
-  .undo-btn:hover { background: rgba(245,241,230,0.15); color: var(--chalk); }
-  .undo-btn:active { transform: scale(0.96); }
-  .undo-btn.flash { background: rgba(127,168,117,0.3); color: var(--chalk); }
-  .footer-btns { display: flex; gap: 1vw; }
+  .footer-btn:hover { background: rgba(245,241,230,0.15); color: var(--chalk); }
+  .footer-btn:active { transform: scale(0.96); }
+  .footer-btn.flash { background: rgba(127,168,117,0.3); color: var(--chalk); }
+  .footer-btns { display: flex; gap: 0.9vw; align-items: center; }
   .all-btn { border-color: rgba(127,168,117,0.5); }
   .all-btn:hover { background: rgba(127,168,117,0.2); }
+  .verbrauch-btn { border-color: rgba(232,163,61,0.5); }
+  .verbrauch-btn:hover { background: rgba(232,163,61,0.18); }
 
   header { display: grid; grid-template-columns: 1fr auto 1fr; align-items: start; flex-shrink: 0; margin-bottom: 1.5vh; gap: 1vw; }
   header .status { justify-self: end; }
   .mitte { justify-self: center; display: flex; flex-direction: column; align-items: center; gap: 0.8vh; align-self: start; }
   .datetime { font-size: 2.4vh; color: #FFFFFF; white-space: nowrap; }
 
-  footer { display: flex; align-items: center; justify-content: space-between; flex-shrink: 0;
-           margin-top: 1.6vh; padding-top: 1.2vh; border-top: 1px solid var(--panel-border); }
-  .mid { justify-self: center; display: flex; flex-direction: column; align-items: center; gap: 0.6vh; }
-  h1 { font-size: 3.2vh; letter-spacing: 0.06em; text-transform: uppercase; color: #FFFFFF; font-weight: 700; line-height: 1.1; }
-  .status { font-size: 2.2vh; color: #FFFFFF; display: flex; align-items: center; gap: 0.8vw; white-space: nowrap; }
-  .conn { display: flex; align-items: center; gap: 0.5vw; font-size: 1.8vh; white-space: nowrap; }
-  .dot { width: 1.4vh; height: 1.4vh; border-radius: 50%; background: var(--sage); flex-shrink: 0; }
+  footer { flex-shrink: 0; margin-top: 1.2vh; padding-top: 1.1vh; border-top: 1px solid var(--panel-border); }
+  .footer-row { display: flex; align-items: center; justify-content: space-between; gap: 1vw; }
+  h1 { font-size: 3vh; letter-spacing: 0.06em; text-transform: uppercase; color: #FFFFFF; font-weight: 700; line-height: 1.1; }
+  .status { font-size: 2.1vh; color: #FFFFFF; display: flex; align-items: center; gap: 0.8vw; white-space: nowrap; }
+  .conn { display: flex; align-items: center; gap: 0.5vw; font-size: 1.7vh; white-space: nowrap; }
+  .dot { width: 1.3vh; height: 1.3vh; border-radius: 50%; background: var(--sage); flex-shrink: 0; }
   .dot.offline { background: #B5573F; }
   .conn.online #connText { color: var(--sage); }
   .conn.offline #connText { color: #D98169; font-weight: 700; }
 
-  /* Feste Slot-Breiten: jede Box ist immer gleich breit, egal wie viele offen sind */
-  .list { flex: 1; position: relative; min-height: 0;
-          --gap-w: 1.2vw;
-          --slot-w: calc((100% - 4 * var(--gap-w)) / 5); }
+  /* ===== Verbrauchsübersicht (Fußzeile, auf-/zuklappbar) ===== */
+  .verbrauch-panel {
+    margin-top: 1vh; padding: 1.1vh 1.2vw; background: var(--panel); border: 1px solid var(--panel-border);
+    border-radius: 1.2vh; font-size: 1.9vh; line-height: 1.55; color: #FFFFFF;
+  }
+  .verbrauch-panel .zeile1 { margin-bottom: 0.3vh; }
+  .verbrauch-panel .broetchen { color: var(--mustard); font-weight: 700; }
+  .verbrauch-leer { color: var(--chalk-muted); font-style: italic; }
 
-  /* Äußerer Rahmen: Nummer oben + Karte darunter, auf festem Slot positioniert */
+  /* ===== Bon-Liste: echtes horizontales Scrollen ===== */
+  .list {
+    flex: 1; min-height: 0; position: relative;
+    display: flex; overflow-x: auto; overflow-y: hidden;
+    gap: 1.2vw; padding: 0 0.2vw;
+    scroll-behavior: smooth;
+  }
+  .list::-webkit-scrollbar { height: 0.8vh; }
+  .list::-webkit-scrollbar-thumb { background: var(--panel-border); border-radius: 1vh; }
+
+  /* Jede Karte exakt 1/5 der Breite -> 5 passen ins Bild, mehr liegen im Scrollbereich */
   .bon {
-    position: absolute; top: 50%; left: 0;
-    width: var(--slot-w);
+    flex: 0 0 calc((100% - 4 * 1.2vw) / 5);
     display: flex; flex-direction: column; align-items: stretch;
     gap: 1vh; cursor: pointer;
-    /* Slot-Position: 0 = ganz links … 4 = ganz rechts */
-    transform: translate(calc(var(--slot, 0) * (100% + var(--gap-w))), -50%);
-    transition: transform 1s cubic-bezier(0.22, 0.61, 0.36, 1), opacity 0.35s ease;
   }
   .bon.row-enter { animation: fadeIn 0.35s ease-out; }
   @keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
 
-  /* Große, mittige Positionsnummer über der Box */
   .pos-nr {
-    text-align: center; font-size: 5vh; font-weight: 800; line-height: 1;
-    color: #FFFFFF; opacity: 0.9; letter-spacing: -0.02em;
+    text-align: center; font-size: 4.6vh; font-weight: 800; line-height: 1;
+    color: #FFFFFF; opacity: 0.9; letter-spacing: -0.02em; flex-shrink: 0;
   }
   .bon.done .pos-nr { color: var(--sage); opacity: 0.8; }
 
-  /* Die eigentliche Bon-Karte */
   .bon-card {
     background: var(--panel); border: 2px solid var(--panel-border); border-radius: 1.6vh;
-    padding: 2vh 1.2vw; display: flex; flex-direction: column; gap: 1.2vh;
-    height: 40vh; overflow: hidden; position: relative;
+    padding: 1.8vh 1.1vw; display: flex; flex-direction: column; gap: 1vh;
+    min-height: 40vh; overflow: hidden; position: relative;
   }
-
-  /* Ausgegeben: abgehakt, ausgegraut, verschwindet nach kurzer Zeit von selbst */
-  .bon:active .bon-card { filter: brightness(1.25); }
+  .bon:active .bon-card { filter: brightness(1.2); }
   .bon.done .bon-card { opacity: 0.4; border-color: var(--sage); background: var(--panel); }
-  .bon.done .bon-item { text-decoration: line-through; }
-  .bon.done .bon-qty { color: #FFFFFF; }
-  .bon.done .bon-time { color: var(--sage); }
+  .bon.expanded .bon-card { border-color: var(--mustard); background: linear-gradient(180deg, rgba(232,163,61,0.08), var(--panel)); }
 
   .done-badge {
     position: absolute; top: 1vh; right: 1vw;
-    font-size: 4vh; color: var(--sage); line-height: 1; display: none;
+    font-size: 3.6vh; color: var(--sage); line-height: 1; display: none;
   }
   .bon.done .done-badge { display: block; }
 
-  .bon-time { font-size: 2.4vh; color: #FFFFFF; font-weight: 700; flex-shrink: 0; letter-spacing: 0.04em; }
-  .bon-items { display: flex; flex-direction: column; gap: 0.8vh; min-height: 0; overflow: hidden; flex: 1; }
-  .bon-item { font-size: 3.2vh; font-weight: 700; line-height: 1.15; overflow-wrap: break-word; }
+  .bon-time { font-size: 2.2vh; color: #FFFFFF; font-weight: 700; flex-shrink: 0; letter-spacing: 0.04em; }
+  .bon-items { display: flex; flex-direction: column; gap: 0.7vh; min-height: 0; overflow: hidden; flex: 1; }
+
+  .bon-item { font-size: 2.9vh; font-weight: 700; line-height: 1.15; overflow-wrap: break-word; }
+  .bon.done .bon-item { text-decoration: line-through; }
   .bon-qty { color: var(--mustard); margin-right: 0.4vw; }
+  .bon.done .bon-qty { color: #FFFFFF; }
+
+  /* Einzelpositions-Zeilen im aufgeklappten Modus */
+  .item-line { display: flex; align-items: center; gap: 0.5vw; padding: 0.5vh 0.4vw; border-radius: 0.8vh; }
+  .item-line.tappable { background: rgba(245,241,230,0.06); }
+  .item-line.tappable:active { background: rgba(232,163,61,0.25); }
+  .item-line.given { opacity: 0.45; }
+  .item-line.given .bon-item { text-decoration: line-through; }
+  .item-hint { font-size: 1.5vh; color: var(--chalk-muted); margin-top: 0.3vh; }
+
+  .close-expand {
+    align-self: center; margin-top: auto; font-size: 1.8vh; color: var(--chalk-muted);
+    background: rgba(245,241,230,0.08); border: 1px solid var(--panel-border);
+    border-radius: 0.8vh; padding: 0.5vh 1.5vw;
+  }
 
   .empty { position: absolute; inset: 0; display: flex; align-items: center; justify-content: center; font-size: 3.5vh; color: #FFFFFF; opacity: 0.85; text-align: center; }
 </style>
@@ -134,16 +155,24 @@
   </div>
 
   <footer>
-    <span class="hint">Taste <b>1–5</b> = Bestellung ausgegeben &nbsp;·&nbsp; Taste <b>0</b> = letzte zurückholen</span>
-    <div class="footer-btns">
-      <button class="undo-btn" id="undoBtn" title="Zuletzt ausgegebene Bestellung zurückholen">&#10226; Undo</button>
-      <button class="undo-btn all-btn" id="doneAllBtn" title="Alle offenen Bestellungen als ausgegeben markieren">&#10003;&#10003; Alle ausgegeben</button>
+    <div class="footer-row">
+      <span class="hint">Taste <b>1–5</b> = ausgegeben &nbsp;·&nbsp; <b>0</b> = zurück &nbsp;·&nbsp; lang drücken = Positionen einzeln</span>
+      <div class="footer-btns">
+        <button class="footer-btn verbrauch-btn" id="verbrauchToggleBtn">📋 Verbrauch</button>
+        <button class="footer-btn" id="undoBtn" title="Zuletzt ausgegebene Bestellung zurückholen">&#10226; Undo</button>
+        <button class="footer-btn all-btn" id="doneAllBtn" title="Alle offenen Bestellungen als ausgegeben markieren">&#10003;&#10003; Alle ausgegeben</button>
+      </div>
+    </div>
+    <div class="verbrauch-panel" id="verbrauchPanel">
+      <div class="verbrauch-leer">Lade Verbrauchsdaten…</div>
     </div>
   </footer>
 
 <script>
-  const DISPLAY_VERSION = "1.16.0";   // bei jeder Änderung an dieser Datei erhöhen
-  const POLL_MS = 800;   // wie oft beim Server nachgefragt wird
+  const DISPLAY_VERSION = "2.1.0";   // bei jeder Änderung an dieser Datei erhöhen
+  const POLL_MS = 800;
+  const VERBRAUCH_POLL_MS = 30000;   // Verbrauchsübersicht seltener aktualisieren
+  const LONGPRESS_MS = 550;
   let failCount = 0;
   let currentBons = [];
 
@@ -157,8 +186,6 @@
   setInterval(tick, 5000);
   document.getElementById("version").textContent = "v" + DISPLAY_VERSION;
 
-  const VISIBLE = 5;   // so viele Bestellungen passen auf den Bildschirm
-
   // Kurznamen nur für die Anzeige – in Kasse, Verlauf und CSV bleiben die vollen Namen
   const KURZNAMEN = {
     "Hähnchenbrustfilet": "Hähnchen-Brust",
@@ -167,10 +194,10 @@
     "Thüringer Bratwurst": "Thüringer",
     "Männergedeck mit Chip": "Männergedeck",
     "Kinder Hotdog": "Kinder-Hotdog",
+    "Currywurst mit Pommes": "Curry+Pommes",
   };
   function kurz(name) { return KURZNAMEN[name] || name; }
 
-  // Verbindungsanzeige mit Klartext-Erklärung
   function setVerbindung(ok) {
     const conn = document.getElementById("conn");
     const dot = document.getElementById("dot");
@@ -182,151 +209,311 @@
   }
   setVerbindung(true);
 
+  // ============================================================
+  //  Bon-Liste: echtes horizontales Scrollen
+  // ============================================================
+
+  // Karten, die gerade in der Einzelpositions-Ansicht aufgeklappt sind (nur lokale UI, nicht synchronisiert)
+  const expandedIds = new Set();
+
+  function isDone(b) { return b.done || pendingDone.has(b.id); }
+
+  function itemsDoneFuer(b) {
+    if (pendingDone.has(b.id)) return b.items.map((it) => it.qty);   // lokal schon als komplett markiert
+    return b.itemsDone || b.items.map(() => 0);
+  }
+
   function render(allBons) {
     const list = document.getElementById("list");
     const waitingEl = document.getElementById("waiting");
 
-    // Es werden immer die ÄLTESTEN offenen Bestellungen gezeigt – neuere warten in der Schlange.
-    // Anzeige dann so, dass die neueste davon links steht und die älteste ganz rechts (Nr. 1).
+    // Chronologisch aufsteigend: älteste zuerst (links). Beim Öffnen/ohne Scrollen sieht man
+    // dadurch automatisch die ältesten 5 – neuere liegen weiter rechts im Scrollbereich.
     const sorted = (allBons || []).slice().sort((a, b) => new Date(a.ts) - new Date(b.ts));
-    const bons = sorted.slice(0, VISIBLE).reverse();
 
-    // Bezahlte, aber noch nicht sichtbare Bestellungen anzeigen
-    const waiting = sorted.length - bons.length;
-    if (waiting > 0) {
-      waitingEl.textContent = "+" + waiting + " noch in der Schlange";
+    const offen = sorted.filter((b) => !isDone(b)).length;
+    // "Wartend" gibt es hier nicht mehr im alten Sinn (alle offenen sind erreichbar durchs Scrollen) –
+    // der Hinweis zeigt stattdessen, wie viele über die ersten 5 hinausgehen.
+    const ueberschuss = Math.max(0, offen - 5);
+    if (ueberschuss > 0) {
+      waitingEl.textContent = "+" + ueberschuss + " noch in der Schlange";
       waitingEl.classList.remove("hidden");
     } else {
       waitingEl.classList.add("hidden");
     }
 
-    // Leerzustand
     const emptyEl = list.querySelector(".empty");
-    if (bons.length === 0) {
+    if (sorted.length === 0) {
       list.querySelectorAll(".bon").forEach((el) => el.remove());
       if (!emptyEl) list.innerHTML = '<div class="empty">Warte auf die erste Bestellung…</div>';
       return;
     }
     if (emptyEl) emptyEl.remove();
 
-    const wanted = new Set(bons.map((b) => b.id));
-
-    // 1) Karten entfernen, die nicht mehr angezeigt werden
+    const wanted = new Set(sorted.map((b) => b.id));
     list.querySelectorAll(".bon").forEach((el) => {
-      if (!wanted.has(el.getAttribute("data-id"))) el.remove();
+      const id = el.getAttribute("data-id");
+      if (!wanted.has(id)) { el.remove(); expandedIds.delete(id); }
     });
 
-    // 2) Vorhandene aktualisieren, neue anlegen — ohne die übrigen anzufassen
-    bons.forEach((b, idx) => {
+    sorted.forEach((b, idx) => {
       const done = isDone(b);
+      const expanded = expandedIds.has(b.id);
+      const nr = idx + 1;   // Nummer = chronologischer Rang, bleibt stabil beim Scrollen
       let el = list.querySelector('.bon[data-id="' + cssEscape(b.id) + '"]');
 
       if (!el) {
         el = document.createElement("div");
         el.className = "bon row-enter";
         el.setAttribute("data-id", b.id);
-        const time = new Date(b.ts).toLocaleTimeString("de-DE", { hour: "2-digit", minute: "2-digit" });
-        const items = b.items.map((i) =>
-          '<span class="bon-item"><span class="bon-qty">' + i.qty + '&times;</span>' + escapeHtml(kurz(i.name)) + '</span>'
-        ).join("");
-        el.innerHTML = '<div class="pos-nr"></div>' +
-                       '<div class="bon-card">' +
-                         '<div class="done-badge">&check;</div>' +
-                         '<div class="bon-time">' + time + '</div>' +
-                         '<div class="bon-items">' + items + '</div>' +
-                       '</div>';
+        el.innerHTML = '<div class="pos-nr"></div><div class="bon-card"><div class="done-badge">&check;</div><div class="bon-time"></div><div class="bon-items"></div></div>';
         list.appendChild(el);
-        // Animationsklasse nach dem Abspielen entfernen -> läuft garantiert nur einmal
         el.addEventListener("animationend", () => el.classList.remove("row-enter"), { once: true });
+        attachCardEvents(el);
       }
 
-      // Feste Slot-Position: rechtsbündig, damit die älteste Bestellung immer ganz rechts steht
-      const slot = (VISIBLE - bons.length) + idx;
-      el.style.setProperty("--slot", slot);
+      // Reihenfolge im DOM = chronologisch (für den Scroll-Effekt); nur bei Bedarf umsortieren
+      if (list.children[idx] !== el) list.insertBefore(el, list.children[idx] || null);
 
-      // Zustandsklasse nur bei tatsächlicher Änderung setzen
       el.classList.toggle("done", done);
+      el.classList.toggle("expanded", expanded);
+      el.dataset.nr = nr;
 
-      // Positionsnummer über der Karte: rechts = 1, nach links aufsteigend
       const nrEl = el.querySelector(".pos-nr");
-      const wantNr = String(bons.length - idx);
-      if (nrEl.textContent !== wantNr) nrEl.textContent = wantNr;
-      el.dataset.nr = wantNr;   // damit die Tastatur die richtige Karte findet
+      if (nrEl.textContent !== String(nr)) nrEl.textContent = String(nr);
+
+      const time = new Date(b.ts).toLocaleTimeString("de-DE", { hour: "2-digit", minute: "2-digit" });
+      const timeEl = el.querySelector(".bon-time");
+      if (timeEl.textContent !== time) timeEl.textContent = time;
+
+      renderItems(el.querySelector(".bon-items"), b, expanded, done);
     });
   }
 
-  // Maskiert Sonderzeichen für die Verwendung in einem CSS-Selektor
-  function cssEscape(s) {
-    return String(s).replace(/["\\]/g, "\\$&");
-  }
+  function renderItems(container, b, expanded, done) {
+    const doneQtys = itemsDoneFuer(b);
 
-  // Lokal gemerkte Abhak-Klicks, damit die Anzeige sofort reagiert (ohne auf den Server zu warten)
-  const pendingDone = new Set();
-  function isDone(b) { return b.done || pendingDone.has(b.id); }
+    if (!expanded) {
+      // Kompakte Ansicht: eine Zeile pro Position (wie bisher)
+      container.innerHTML = b.items.map((it) =>
+        '<div class="bon-item"><span class="bon-qty">' + it.qty + '&times;</span>' + escapeHtml(kurz(it.name)) + '</div>'
+      ).join("");
+      return;
+    }
 
-  function markDone(id) {
-    if (!id || pendingDone.has(id)) return;
-    pendingDone.add(id);
-    render(currentBons);
-    fetch("/api/bon/done", {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ id: id }),
-    }).then(() => {
-      setTimeout(poll, 450);   // kurz nach Ablauf der Anzeigedauer aktualisieren
-    }).catch(() => {
-      pendingDone.delete(id); // Server nicht erreichbar -> Markierung zurücknehmen
-      render(currentBons);
+    // Aufgeklappte Ansicht: jede Position einzeln antippbar, ggf. in "gegeben"/"offen" gesplittet
+    let html = "";
+    b.items.forEach((it, idx) => {
+      const gegeben = doneQtys[idx] || 0;
+      const offen = it.qty - gegeben;
+      if (gegeben > 0) {
+        html += '<div class="item-line given tappable" data-idx="' + idx + '" data-richtung="zurueck">' +
+                  '<span class="bon-item"><span class="bon-qty">' + gegeben + '&times;</span>' + escapeHtml(kurz(it.name)) + '</span>' +
+                '</div>';
+      }
+      if (offen > 0) {
+        html += '<div class="item-line tappable" data-idx="' + idx + '" data-richtung="vor">' +
+                  '<span class="bon-item"><span class="bon-qty">' + offen + '&times;</span>' + escapeHtml(kurz(it.name)) + '</span>' +
+                '</div>';
+      }
     });
+    html += '<div class="item-hint">Antippen: offen → gegeben. Nochmal antippen: zurück.</div>';
+    html += '<div class="close-expand" data-schliessen="1">▲ zuklappen</div>';
+    container.innerHTML = html;
   }
 
-  document.getElementById("list").addEventListener("click", (e) => {
-    const card = e.target.closest(".bon");
-    if (card) markDone(card.getAttribute("data-id"));
-  });
-
-  // Zuletzt ausgegebene Bestellung zurückholen
-  function undo() {
-    fetch("/api/undo", { method: "POST" })
-      .then((r) => r.json())
-      .then((data) => {
-        if (data && data.ok) {
-          pendingDone.clear();          // sonst gilt der Bon lokal weiter als ausgegeben
-          const btn = document.getElementById("undoBtn");
-          btn.classList.add("flash");
-          setTimeout(() => btn.classList.remove("flash"), 400);
-          poll();                        // sofort aktualisieren statt aufs nächste Intervall zu warten
-        }
-      })
-      .catch(() => {});
-  }
-
-  document.getElementById("undoBtn").addEventListener("click", undo);
-
-  // Alle offenen Bestellungen auf einmal abhaken (mit Rückfrage, damit es nicht versehentlich passiert)
-  document.getElementById("doneAllBtn").addEventListener("click", () => {
-    const offen = currentBons.filter((b) => !isDone(b)).length;
-    if (offen === 0) return;
-    if (!window.confirm(offen + " offene Bestellung" + (offen === 1 ? "" : "en") + " wirklich alle als ausgegeben markieren?")) return;
-    fetch("/api/done-all", { method: "POST" })
-      .then((r) => r.json())
-      .then(() => { pendingDone.clear(); poll(); })
-      .catch(() => {});
-  });
-
-  // Tastatur / Nummernblock: 1–5 haken die Bestellung an der jeweiligen Position ab
-  document.addEventListener("keydown", (e) => {
-    if (e.key === "0" || e.key.toLowerCase() === "u") { undo(); return; }  // 0 oder U = Rückgängig
-    const n = parseInt(e.key, 10);
-    if (!Number.isFinite(n) || n < 1 || n > VISIBLE) return;
-    const card = document.querySelector('#list .bon[data-nr="' + n + '"]');
-    if (card) markDone(card.getAttribute("data-id"));
-  });
-
+  function cssEscape(s) { return String(s).replace(/["\\]/g, "\\$&"); }
   function escapeHtml(s) {
     return String(s).replace(/[&<>"']/g, (c) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" }[c]));
   }
 
+  // ============================================================
+  //  Abhaken (ganzer Bon / einzelne Position)
+  // ============================================================
+
+  const pendingDone = new Set();
+
+  function markDone(id) {
+    if (!id || pendingDone.has(id)) return;
+    pendingDone.add(id);
+    expandedIds.delete(id);
+    render(currentBons);
+    fetch("/api/bon/done", {
+      method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ id: id }),
+    }).then(() => setTimeout(poll, 450))
+      .catch(() => { pendingDone.delete(id); render(currentBons); });
+  }
+
+  function setItemQty(id, index, doneQty) {
+    fetch("/api/bon/item", {
+      method: "POST", headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ id: id, index: index, doneQty: doneQty }),
+    }).then((r) => r.json()).then((data) => {
+      if (data && data.ok && data.bon) {
+        const i = currentBons.findIndex((b) => b.id === id);
+        if (i >= 0) currentBons[i] = data.bon;
+        render(currentBons);
+        if (data.bon.done) setTimeout(poll, 450);
+      }
+    }).catch(() => {});
+  }
+
+  // ============================================================
+  //  Antippen vs. lang drücken pro Karte
+  // ============================================================
+
+  function attachCardEvents(el) {
+    let timer = null;
+    let longPressed = false;
+    let startX = 0, startY = 0;
+
+    function start(x, y) {
+      longPressed = false;
+      startX = x; startY = y;
+      timer = setTimeout(() => {
+        longPressed = true;
+        const id = el.getAttribute("data-id");
+        if (expandedIds.has(id)) expandedIds.delete(id); else expandedIds.add(id);
+        render(currentBons);
+      }, LONGPRESS_MS);
+    }
+    function cancel() { if (timer) { clearTimeout(timer); timer = null; } }
+
+    el.addEventListener("pointerdown", (e) => start(e.clientX, e.clientY));
+    el.addEventListener("pointermove", (e) => {
+      if (timer && (Math.abs(e.clientX - startX) > 12 || Math.abs(e.clientY - startY) > 12)) cancel();
+    });
+    el.addEventListener("pointerup", (e) => {
+      cancel();
+      if (longPressed) return;   // langer Druck hat bereits gehandelt
+
+      const itemLine = e.target.closest(".item-line");
+      const schliessen = e.target.closest("[data-schliessen]");
+      const id = el.getAttribute("data-id");
+
+      if (schliessen) {
+        expandedIds.delete(id);
+        render(currentBons);
+        return;
+      }
+      if (itemLine) {
+        const idx = parseInt(itemLine.getAttribute("data-idx"), 10);
+        const bon = currentBons.find((b) => b.id === id);
+        if (!bon) return;
+        const doneQtys = itemsDoneFuer(bon);
+        const richtung = itemLine.getAttribute("data-richtung");
+        const aktuell = doneQtys[idx] || 0;
+        const neu = richtung === "vor" ? aktuell + 1 : Math.max(0, aktuell - 1);
+        setItemQty(id, idx, neu);
+        return;
+      }
+      // Tap auf die Karte außerhalb der Item-Zeilen: nur im nicht-aufgeklappten Zustand -> ganzer Bon fertig
+      if (!expandedIds.has(id)) markDone(id);
+    });
+    el.addEventListener("pointercancel", cancel);
+  }
+
+  // ============================================================
+  //  Auto-Rücksprung zu den ältesten 5 nach 10 Sek. ohne Scrollen
+  // ============================================================
+  let scrollIdleTimer = null;
+  document.getElementById("list").addEventListener("scroll", () => {
+    clearTimeout(scrollIdleTimer);
+    scrollIdleTimer = setTimeout(() => {
+      document.getElementById("list").scrollTo({ left: 0, behavior: "smooth" });
+    }, 10000);
+  });
+
+  // ============================================================
+  //  Undo / Alle ausgegeben
+  // ============================================================
+  function undo() {
+    fetch("/api/undo", { method: "POST" }).then((r) => r.json()).then((data) => {
+      if (data && data.ok) {
+        pendingDone.clear();
+        const btn = document.getElementById("undoBtn");
+        btn.classList.add("flash");
+        setTimeout(() => btn.classList.remove("flash"), 400);
+        poll();
+      }
+    }).catch(() => {});
+  }
+  document.getElementById("undoBtn").addEventListener("click", undo);
+
+  document.getElementById("doneAllBtn").addEventListener("click", () => {
+    const offen = currentBons.filter((b) => !isDone(b)).length;
+    if (offen === 0) return;
+    if (!window.confirm(offen + " offene Bestellung" + (offen === 1 ? "" : "en") + " wirklich alle als ausgegeben markieren?")) return;
+    fetch("/api/done-all", { method: "POST" }).then((r) => r.json()).then(() => { pendingDone.clear(); expandedIds.clear(); poll(); }).catch(() => {});
+  });
+
+  // Tastatur / Nummernblock: 1–5 = jeweilige Karte (chronologischer Rang) komplett abhaken
+  document.addEventListener("keydown", (e) => {
+    if (e.key === "0" || e.key.toLowerCase() === "u") { undo(); return; }
+    const n = parseInt(e.key, 10);
+    if (!Number.isFinite(n) || n < 1 || n > 5) return;
+    const card = document.querySelector('#list .bon[data-nr="' + n + '"]');
+    if (card) markDone(card.getAttribute("data-id"));
+  });
+
+  // ============================================================
+  //  Verbrauchsübersicht (Team-Ansicht: nur Stückzahlen, kein Umsatz)
+  // ============================================================
+
+  const BROETCHEN = ["thueringer", "schweinenacken", "haehnchenbrust", "rotewurst", "currywurst", "feuerwurst"];
+  const BREZELN = ["weisswurstbrezel", "maennergedeck"];
+  const PRODUKT_NAMEN = {
+    pommes: "Pommes", wedges: "Wedges", currywurst: "Currywurst",
+    currywurstpommes: "Curry+Pommes", rotewurst: "Rote Wurst", kinderhotdog: "Kinder Hotdog",
+    feuerwurst: "Feuerwurst", thueringer: "Thüringer", schweinenacken: "Schweinsteak",
+    haehnchenbrust: "Hähnchen-Brust", weisswurstbrezel: "Weißwurst", maennergedeck: "Männergedeck",
+  };
+
+  let verbrauchOffen = true;   // startet aufgeklappt
+
+  function verbrauchAnzeigen(sichtbar) {
+    document.getElementById("verbrauchPanel").classList.toggle("hidden", !sichtbar);
+  }
+  verbrauchAnzeigen(true);
+
+  document.getElementById("verbrauchToggleBtn").addEventListener("click", () => {
+    verbrauchOffen = !verbrauchOffen;
+    verbrauchAnzeigen(verbrauchOffen);
+  });
+
+  function verbrauchLaden() {
+    fetch("/api/backup?t=" + Date.now(), { cache: "no-store" })
+      .then((r) => r.json())
+      .then((a) => {
+        const panel = document.getElementById("verbrauchPanel");
+        if (!a.ok) { panel.innerHTML = '<div class="verbrauch-leer">Noch keine Daten für heute.</div>'; return; }
+        const heute = new Date().toISOString().slice(0, 10);
+        const tag = (a.daten.history || {})[heute];
+        if (!tag) { panel.innerHTML = '<div class="verbrauch-leer">Noch keine Verkäufe heute erfasst.</div>'; return; }
+        const produkte = tag.products || {};
+        const teile = Object.keys(PRODUKT_NAMEN)
+          .filter((id) => produkte[id] > 0)
+          .map((id) => PRODUKT_NAMEN[id] + " " + produkte[id] + "×");
+        const broetchen = BROETCHEN.reduce((s, id) => s + (produkte[id] || 0), 0);
+        const brezeln = BREZELN.reduce((s, id) => s + (produkte[id] || 0), 0);
+        if (teile.length === 0) {
+          panel.innerHTML = '<div class="verbrauch-leer">Noch keine Verkäufe heute erfasst.</div>';
+          return;
+        }
+        panel.innerHTML = '<div class="zeile1">' + teile.join(" · ") + '</div>' +
+                           '<div class="broetchen">🥖 Brötchen insgesamt: ' + broetchen + ' Stück' +
+                           ' &nbsp;·&nbsp; 🥨 Brezeln insgesamt: ' + brezeln + ' Stück</div>';
+      })
+      .catch(() => {
+        document.getElementById("verbrauchPanel").innerHTML = '<div class="verbrauch-leer">Verbrauchsdaten nicht erreichbar.</div>';
+      });
+  }
+  verbrauchLaden();
+  setInterval(verbrauchLaden, VERBRAUCH_POLL_MS);
+
+  // ============================================================
+  //  Server abfragen
+  // ============================================================
   async function poll() {
     try {
       const res = await fetch("/api/bons", { cache: "no-store" });
@@ -334,10 +521,8 @@
       failCount = 0;
       setVerbindung(true);
       currentBons = data.bons;
-      // Aufräumen: Bons, die der Server nicht mehr kennt, aus der lokalen Merkliste entfernen
       const serverIds = new Set(currentBons.map((b) => b.id));
       pendingDone.forEach((id) => { if (!serverIds.has(id)) pendingDone.delete(id); });
-
       render(currentBons);
     } catch (e) {
       failCount++;
