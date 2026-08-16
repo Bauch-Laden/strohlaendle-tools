@@ -170,7 +170,7 @@
   </footer>
 
 <script>
-  const DISPLAY_VERSION = "2.2.0";   // bei jeder Änderung an dieser Datei erhöhen
+  const DISPLAY_VERSION = "2.3.0";   // bei jeder Änderung an dieser Datei erhöhen
   const POLL_MS = 800;
   const VERBRAUCH_POLL_MS = 30000;   // Verbrauchsübersicht seltener aktualisieren
   const LONGPRESS_MS = 550;
@@ -307,14 +307,25 @@
     const doneQtys = itemsDoneFuer(b);
 
     if (!expanded) {
-      // Kompakte Ansicht: eine Zeile pro Position (wie bisher)
-      container.innerHTML = b.items.map((it) =>
-        '<div class="bon-item"><span class="bon-qty">' + it.qty + '&times;</span>' + escapeHtml(kurz(it.name)) + '</div>'
-      ).join("");
+      // Kompakte Ansicht: zeigt Teilfortschritt ("2× gegeben" durchgestrichen, "1× offen" normal),
+      // aber rein informativ – nicht antippbar. So sieht JEDER Bildschirm sofort, was schon
+      // ausgegeben wurde, auch ohne dort selbst lang gedrückt zu haben.
+      let html = "";
+      b.items.forEach((it, idx) => {
+        const gegeben = doneQtys[idx] || 0;
+        const offen = it.qty - gegeben;
+        if (gegeben > 0) {
+          html += '<div class="item-line given"><span class="bon-item"><span class="bon-qty">' + gegeben + '&times;</span>' + escapeHtml(kurz(it.name)) + '</span></div>';
+        }
+        if (offen > 0) {
+          html += '<div class="item-line"><span class="bon-item"><span class="bon-qty">' + offen + '&times;</span>' + escapeHtml(kurz(it.name)) + '</span></div>';
+        }
+      });
+      container.innerHTML = html;
       return;
     }
 
-    // Aufgeklappte Ansicht: jede Position einzeln antippbar, ggf. in "gegeben"/"offen" gesplittet
+    // Aufgeklappte Ansicht: jede Position einzeln antippbar, gleiche Aufteilung + Bedienhinweise
     let html = "";
     b.items.forEach((it, idx) => {
       const gegeben = doneQtys[idx] || 0;
@@ -400,7 +411,7 @@
       cancel();
       if (longPressed) return;   // langer Druck hat bereits gehandelt
 
-      const itemLine = e.target.closest(".item-line");
+      const itemLine = e.target.closest(".item-line.tappable");
       const schliessen = e.target.closest("[data-schliessen]");
       const id = el.getAttribute("data-id");
 
