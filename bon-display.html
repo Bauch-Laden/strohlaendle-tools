@@ -77,6 +77,7 @@
   .list {
     flex: 1; min-height: 0; position: relative;
     display: flex; overflow-x: auto; overflow-y: hidden;
+    justify-content: flex-end;
     gap: 1.2vw; padding: 0 0.2vw;
     scroll-behavior: smooth;
   }
@@ -169,7 +170,7 @@
   </footer>
 
 <script>
-  const DISPLAY_VERSION = "2.1.0";   // bei jeder Änderung an dieser Datei erhöhen
+  const DISPLAY_VERSION = "2.2.0";   // bei jeder Änderung an dieser Datei erhöhen
   const POLL_MS = 800;
   const VERBRAUCH_POLL_MS = 30000;   // Verbrauchsübersicht seltener aktualisieren
   const LONGPRESS_MS = 550;
@@ -227,13 +228,11 @@
     const list = document.getElementById("list");
     const waitingEl = document.getElementById("waiting");
 
-    // Chronologisch aufsteigend: älteste zuerst (links). Beim Öffnen/ohne Scrollen sieht man
-    // dadurch automatisch die ältesten 5 – neuere liegen weiter rechts im Scrollbereich.
+    // Chronologisch aufsteigend nur für die NUMMERIERUNG (älteste = Nr. 1, bleibt stabil).
     const sorted = (allBons || []).slice().sort((a, b) => new Date(a.ts) - new Date(b.ts));
+    const nrById = new Map(sorted.map((b, idx) => [b.id, idx + 1]));
 
     const offen = sorted.filter((b) => !isDone(b)).length;
-    // "Wartend" gibt es hier nicht mehr im alten Sinn (alle offenen sind erreichbar durchs Scrollen) –
-    // der Hinweis zeigt stattdessen, wie viele über die ersten 5 hinausgehen.
     const ueberschuss = Math.max(0, offen - 5);
     if (ueberschuss > 0) {
       waitingEl.textContent = "+" + ueberschuss + " noch in der Schlange";
@@ -256,10 +255,13 @@
       if (!wanted.has(id)) { el.remove(); expandedIds.delete(id); }
     });
 
-    sorted.forEach((b, idx) => {
+    // Für die BILDSCHIRM-Reihenfolge (links → rechts) absteigend: neueste links, älteste (Nr. 1) rechts.
+    const anzeigeReihenfolge = sorted.slice().reverse();
+
+    anzeigeReihenfolge.forEach((b, idx) => {
       const done = isDone(b);
       const expanded = expandedIds.has(b.id);
-      const nr = idx + 1;   // Nummer = chronologischer Rang, bleibt stabil beim Scrollen
+      const nr = nrById.get(b.id);
       let el = list.querySelector('.bon[data-id="' + cssEscape(b.id) + '"]');
 
       if (!el) {
@@ -272,7 +274,7 @@
         attachCardEvents(el);
       }
 
-      // Reihenfolge im DOM = chronologisch (für den Scroll-Effekt); nur bei Bedarf umsortieren
+      // Reihenfolge im DOM = neueste links … älteste rechts (für den Scroll-Effekt); nur bei Bedarf umsortieren
       if (list.children[idx] !== el) list.insertBefore(el, list.children[idx] || null);
 
       el.classList.toggle("done", done);
@@ -288,6 +290,17 @@
 
       renderItems(el.querySelector(".bon-items"), b, expanded, done);
     });
+
+    // Beim allerersten Füllen der Liste direkt rechtsbündig zeigen (älteste 5 sichtbar)
+    if (!list.dataset.initialised) {
+      list.dataset.initialised = "1";
+      requestAnimationFrame(() => scrollZurRechten(false));
+    }
+  }
+
+  function scrollZurRechten(smooth) {
+    const list = document.getElementById("list");
+    list.scrollTo({ left: list.scrollWidth - list.clientWidth, behavior: smooth ? "smooth" : "auto" });
   }
 
   function renderItems(container, b, expanded, done) {
@@ -419,9 +432,7 @@
   let scrollIdleTimer = null;
   document.getElementById("list").addEventListener("scroll", () => {
     clearTimeout(scrollIdleTimer);
-    scrollIdleTimer = setTimeout(() => {
-      document.getElementById("list").scrollTo({ left: 0, behavior: "smooth" });
-    }, 10000);
+    scrollIdleTimer = setTimeout(() => scrollZurRechten(true), 10000);
   });
 
   // ============================================================
