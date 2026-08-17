@@ -170,7 +170,7 @@
   </footer>
 
 <script>
-  const DISPLAY_VERSION = "2.3.0";   // bei jeder Änderung an dieser Datei erhöhen
+  const DISPLAY_VERSION = "2.4.0";   // bei jeder Änderung an dieser Datei erhöhen
   const POLL_MS = 800;
   const VERBRAUCH_POLL_MS = 30000;   // Verbrauchsübersicht seltener aktualisieren
   const LONGPRESS_MS = 550;
@@ -491,12 +491,12 @@
     haehnchenbrust: "Hähnchen-Brust", weisswurstbrezel: "Weißwurst", maennergedeck: "Männergedeck",
   };
 
-  let verbrauchOffen = true;   // startet aufgeklappt
+  let verbrauchOffen = false;   // startet eingeklappt
 
   function verbrauchAnzeigen(sichtbar) {
     document.getElementById("verbrauchPanel").classList.toggle("hidden", !sichtbar);
   }
-  verbrauchAnzeigen(true);
+  verbrauchAnzeigen(false);
 
   document.getElementById("verbrauchToggleBtn").addEventListener("click", () => {
     verbrauchOffen = !verbrauchOffen;

@@ -112,6 +112,33 @@
   .cat-btn { display: block; width: 100%; text-align: left; padding: 10px 12px; border-radius: 10px; border: 1px solid var(--panel-border); background: var(--bg); color: var(--chalk); font-size: 14px; cursor: pointer; font-family: inherit; margin-bottom: 8px; }
   .cat-btn.selected { border-color: var(--mustard); background: rgba(232,163,61,0.12); }
 
+  #restProductList { max-height: 34vh; overflow-y: auto; margin: 4px 0 12px 0; border: 1px solid var(--panel-border); border-radius: 10px; }
+  .rest-row { display: flex; align-items: center; justify-content: space-between; padding: 9px 12px; border-bottom: 1px solid var(--panel-border); }
+  .rest-row:last-child { border-bottom: none; }
+  .rest-name { font-size: 14px; color: var(--chalk); }
+  .rest-stepper { display: flex; align-items: center; gap: 10px; }
+  .rest-btn { width: 28px; height: 28px; border-radius: 50%; border: none; background: var(--bg); color: var(--chalk); font-size: 16px; font-weight: 700; cursor: pointer; font-family: inherit; }
+  .rest-qty { min-width: 18px; text-align: center; font-weight: 700; color: var(--mustard); }
+
+  /* Restessen-Nachweis */
+  .nachweis-card { background: #fff; border: 1px solid var(--line); border-radius: 12px; padding: 16px; margin-bottom: 14px; }
+  .nachweis-kopf { display: flex; justify-content: space-between; align-items: baseline; gap: 10px; margin-bottom: 6px; }
+  .nachweis-datum { font-weight: 700; color: var(--dark); }
+  .nachweis-wert { font-weight: 700; color: var(--flame); }
+  .nachweis-zeile { font-size: 0.92rem; color: var(--muted); margin-bottom: 2px; }
+  .nachweis-notiz { font-size: 0.92rem; color: var(--text); margin-top: 6px; font-style: italic; }
+  .nachweis-foto-input { margin-top: 10px; font-size: 0.85rem; }
+  .nachweis-foto-bild { width: 100%; max-height: 320px; object-fit: contain; border-radius: 8px; margin-top: 8px; display: block; background: #f3f0e9; }
+  .nachweis-kein-foto { font-size: 0.85rem; color: var(--muted); margin-top: 8px; }
+
+  @media print {
+    .no-print, header, .brand-tag, .team-row { display: none !important; }
+    #restNachweisView { display: block !important; }
+    body, .wrap { background: #fff !important; }
+    .nachweis-card { break-inside: avoid; border: 1px solid #ccc; }
+    .nachweis-foto-input { display: none; }
+  }
+
   .io-row { display: flex; gap: 8px; padding: 12px 20px 0 20px; flex-shrink: 0; }
   .file-input { color: var(--chalk-muted); font-size: 13px; margin-top: 8px; width: 100%; }
 
@@ -183,7 +210,10 @@
       <button class="primary-btn btn-tap" id="nextCustomerBtn" disabled>Nächster Kunde</button>
       <div class="footer-bottom-bar">
         <div class="brand">🍽️ Bauch &amp; Flamme Bedienung Hilfe <span class="version-tag" id="versionTag"></span></div>
-        <button class="link-btn btn-tap" id="openHistoryBtn">📋 Verlauf</button>
+        <div style="display:flex; gap:14px; align-items:center;">
+          <button class="link-btn btn-tap" id="openRestBtn">🍽️ Restessen</button>
+          <button class="link-btn btn-tap" id="openHistoryBtn">📋 Verlauf</button>
+        </div>
       </div>
     </div>
   </div>
@@ -203,7 +233,61 @@
       <button class="secondary-btn btn-tap" id="exportBtn">⬇️ Export</button>
       <button class="secondary-btn btn-tap" id="importBtn">⬆️ Import</button>
     </div>
+    <div class="io-row">
+      <button class="secondary-btn btn-tap" id="openRestNachweisBtn" style="width:100%;">🖨️ Restessen-Nachweis (PDF)</button>
+    </div>
     <div class="history-list" id="historyList"></div>
+  </div>
+
+  <!-- RESTESSEN-NACHWEIS: Fotos aus der Galerie zuordnen und als PDF drucken -->
+  <div id="restNachweisView" class="hidden">
+    <div class="view-header no-print">
+      <button class="icon-btn btn-tap" id="restNachweisBackBtn" aria-label="Zurück">
+        <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M19 12H5M12 19l-7-7 7-7"/></svg>
+      </button>
+      <span class="view-title" style="flex:1">Restessen-Nachweis</span>
+      <button class="link-btn btn-tap" id="restNachweisDruckenBtn">🖨️ Drucken</button>
+    </div>
+    <div class="modal-note no-print" style="padding: 0 20px 10px;">
+      Bei Einträgen mit 📷-Vermerk kannst du das passende Foto aus der Galerie auswählen – es wird nur für diesen Ausdruck kurz geladen, nicht gespeichert. Danach oben auf „Drucken" und im Druckdialog „Als PDF speichern" wählen.
+    </div>
+    <div id="restNachweisListe" style="padding: 0 20px 30px;"></div>
+  </div>
+
+  <!-- RESTESSEN-MODAL -->
+  <div id="restModal" class="modal-overlay hidden">
+    <div class="modal-box" style="max-height:88vh; overflow-y:auto;">
+      <div class="modal-title">🍽️ Restessen erfassen</div>
+      <div class="modal-note" style="margin-top:0;">Für Buchhaltung/Finanzamt: was ist am Abend übrig geblieben?</div>
+
+      <div id="restCats" style="margin:12px 0;">
+        <button class="cat-btn btn-tap" data-kategorie="team">🍽️ Vom Team gegessen</button>
+        <button class="cat-btn btn-tap" data-kategorie="entsorgt">🗑️ Entsorgt</button>
+      </div>
+
+      <div id="restProductList"></div>
+
+      <input type="text" class="modal-input modal-text-input" id="restNotiz" placeholder="Notiz (Pflicht), z. B. Grund" autocomplete="off">
+
+      <div id="restFotoBereich" style="margin-top:10px;">
+        <label for="restFotoInput" class="secondary-btn btn-tap" style="display:block; text-align:center; cursor:pointer;">
+          📷 Foto aufnehmen (optional)
+        </label>
+        <input type="file" accept="image/*" capture="environment" id="restFotoInput" style="display:none;">
+        <div id="restFotoVorschau" class="hidden" style="margin-top:8px; position:relative;">
+          <img id="restFotoImg" style="width:100%; max-height:160px; object-fit:cover; border-radius:10px; display:block;">
+          <button type="button" id="restFotoEntfernenBtn" class="modal-btn modal-btn-cancel btn-tap" style="width:100%; margin-top:6px;">Foto entfernen</button>
+        </div>
+        <div class="modal-note" style="margin-top:6px;">Das Foto bleibt in der Fotogalerie dieses Geräts – die Kasse speichert nur einen Vermerk, nicht das Bild selbst.</div>
+      </div>
+
+      <div class="modal-note" id="restWertNote"></div>
+      <div class="modal-error" id="restError"></div>
+      <div class="modal-actions">
+        <button class="modal-btn modal-btn-cancel btn-tap" id="restCancelBtn">Abbrechen</button>
+        <button class="modal-btn modal-btn-ok btn-tap" id="restOkBtn">Speichern</button>
+      </div>
+    </div>
   </div>
 
   <!-- PASSWORT-MODAL -->
@@ -322,7 +406,7 @@
   }
 
   const STORAGE_KEY = "bauchladen_history_v1";
-  const SW_VERSION = "2.7.0";
+  const SW_VERSION = "2.10.0";
   const HISTORY_PASSWORD = "447546";
   let order = {}; // { productId: qty } für den aktuellen Bon
   let toastTimer = null;
@@ -336,6 +420,7 @@
       voucherValue: d.voucherValue || 0,
       transactions: d.transactions || 0,
       specials: d.specials || [],
+      restEssen: d.restEssen || [],
     };
   }
 
@@ -625,6 +710,30 @@
           <div class="hidden" id="specials-${day.dateKey}">${entries}</div>`;
       }
 
+      // Detail-Einträge für Restessen (aufklappbar, getrennt von Rabatten/Gutscheinen)
+      let restHtml = "";
+      let restWertGesamt = 0;
+      if (day.restEssen.length > 0) {
+        const restEntries = day.restEssen.map((r) => {
+          restWertGesamt += r.wert || 0;
+          const itemsText = Object.entries(r.items || {})
+            .filter(([, q]) => q > 0)
+            .map(([id, q]) => {
+              const prod = PRODUCTS.find((p) => p.id === id);
+              return `${q}x ${prod ? prod.name : id}`;
+            })
+            .join(", ");
+          const time = r.ts ? new Date(r.ts).toLocaleTimeString("de-DE", { hour: "2-digit", minute: "2-digit" }) : "";
+          const kategorieLabel = r.kategorie === "team" ? "🍽️ Team gegessen" : "🗑️ Entsorgt";
+          const fotoHinweis = r.fotoVorhanden ? " · 📷 Foto in Galerie" : "";
+          return `<div class="special-entry"><b>${kategorieLabel}</b> ${time ? "· " + time : ""}${fotoHinweis}<br>${escapeHtml(itemsText)} · Warenwert ${formatEUR(r.wert)}<br><i>${escapeHtml(r.notiz)}</i></div>`;
+        }).join("");
+        restHtml = `
+          <button class="details-btn btn-tap" data-restday="${day.dateKey}">🍽️ Restessen (${day.restEssen.length}) · ${formatEUR(restWertGesamt)}</button>
+          <div class="hidden" id="rest-${day.dateKey}">${restEntries}</div>`;
+      }
+
+
       return `
         <div class="day-card">
           <div class="day-top">
@@ -634,12 +743,19 @@
           <div class="day-sub">${day.transactions || 0} ${day.transactions === 1 ? "Bon" : "Bons"} · 🥖 ${broetchenAnzahl(day.products)} Brötchen</div>
           <div class="day-items">${itemsHtml}</div>
           ${detailsHtml}
+          ${restHtml}
         </div>`;
     }).join("");
 
-    container.querySelectorAll(".details-btn").forEach((btn) => {
+    container.querySelectorAll(".details-btn[data-day]").forEach((btn) => {
       btn.addEventListener("click", () => {
         const el = document.getElementById("specials-" + btn.getAttribute("data-day"));
+        if (el) el.classList.toggle("hidden");
+      });
+    });
+    container.querySelectorAll(".details-btn[data-restday]").forEach((btn) => {
+      btn.addEventListener("click", () => {
+        const el = document.getElementById("rest-" + btn.getAttribute("data-restday"));
         if (el) el.classList.toggle("hidden");
       });
     });
@@ -650,6 +766,91 @@
     document.getElementById("historyView").classList.remove("hidden");
     renderHistory();
   }
+
+  // ---------- Restessen-Nachweis (Fotos aus der Galerie kurz zuordnen, dann drucken/PDF) ----------
+  // Ausgewählte Foto-Dateien werden NUR im Arbeitsspeicher gehalten (Object-URLs), nie gespeichert.
+  const restNachweisFotos = new Map();   // entryKey -> Object-URL, nur für die aktuelle Sitzung
+
+  function restEntryKey(dateKey, idx) { return dateKey + "#" + idx; }
+
+  function renderRestNachweis() {
+    const history = loadHistory();
+    const dayKeys = Object.keys(history).filter((k) => /^\d{4}-\d{2}-\d{2}$/.test(k)).sort();
+
+    const eintraege = [];
+    dayKeys.forEach((dateKey) => {
+      const day = normDay(history[dateKey]);
+      day.restEssen.forEach((r, idx) => eintraege.push({ dateKey, idx, r }));
+    });
+
+    const liste = document.getElementById("restNachweisListe");
+    if (eintraege.length === 0) {
+      liste.innerHTML = '<div class="empty-state">Noch keine Restessen-Einträge vorhanden.</div>';
+      return;
+    }
+
+    liste.innerHTML = `<h1 style="margin-bottom:4px;">🍽️ Restessen-Nachweis</h1>
+      <div class="modal-note" style="margin-top:0; margin-bottom:16px;">Bauch & Flamme · Stand: ${new Date().toLocaleString("de-DE")}</div>` +
+      eintraege.map(({ dateKey, idx, r }) => {
+        const key = restEntryKey(dateKey, idx);
+        const time = r.ts ? new Date(r.ts).toLocaleTimeString("de-DE", { hour: "2-digit", minute: "2-digit" }) : "";
+        const kategorieLabel = r.kategorie === "team" ? "🍽️ Vom Team gegessen" : "🗑️ Entsorgt";
+        const itemsText = Object.entries(r.items || {})
+          .filter(([, q]) => q > 0)
+          .map(([id, q]) => { const p = PRODUCTS.find((p) => p.id === id); return `${q}x ${p ? p.name : id}`; })
+          .join(", ");
+
+        const fotoBereich = r.fotoVorhanden
+          ? `<input type="file" accept="image/*" class="nachweis-foto-input" data-key="${key}">
+             <img class="nachweis-foto-bild hidden" id="bild-${key}">`
+          : `<div class="nachweis-kein-foto">Kein Foto vermerkt.</div>`;
+
+        return `
+          <div class="nachweis-card">
+            <div class="nachweis-kopf">
+              <span class="nachweis-datum">${formatDateKey(dateKey)}, ${time} Uhr</span>
+              <span class="nachweis-wert">${formatEUR(r.wert)}</span>
+            </div>
+            <div class="nachweis-zeile"><b>${kategorieLabel}</b></div>
+            <div class="nachweis-zeile">${escapeHtml(itemsText)}</div>
+            <div class="nachweis-notiz">${escapeHtml(r.notiz)}</div>
+            ${fotoBereich}
+          </div>`;
+      }).join("");
+
+    liste.querySelectorAll(".nachweis-foto-input").forEach((input) => {
+      input.addEventListener("change", (e) => {
+        const file = e.target.files && e.target.files[0];
+        if (!file) return;
+        const key = input.getAttribute("data-key");
+        const alt = restNachweisFotos.get(key);
+        if (alt) URL.revokeObjectURL(alt);
+        const url = URL.createObjectURL(file);
+        restNachweisFotos.set(key, url);
+        const img = document.getElementById("bild-" + key);
+        img.src = url;
+        img.classList.remove("hidden");
+      });
+    });
+  }
+
+  function openRestNachweis() {
+    document.getElementById("historyView").classList.add("hidden");
+    document.getElementById("restNachweisView").classList.remove("hidden");
+    renderRestNachweis();
+  }
+
+  function closeRestNachweis() {
+    // Ausgewählte Foto-Vorschauen wieder freigeben
+    restNachweisFotos.forEach((url) => URL.revokeObjectURL(url));
+    restNachweisFotos.clear();
+    document.getElementById("restNachweisView").classList.add("hidden");
+    document.getElementById("historyView").classList.remove("hidden");
+  }
+
+  document.getElementById("openRestNachweisBtn").addEventListener("click", openRestNachweis);
+  document.getElementById("restNachweisBackBtn").addEventListener("click", closeRestNachweis);
+  document.getElementById("restNachweisDruckenBtn").addEventListener("click", () => window.print());
 
   function showPasswordModal() {
     const modal = document.getElementById("passwordModal");
@@ -812,6 +1013,131 @@
   document.getElementById("rabattCancelBtn").addEventListener("click", () => document.getElementById("rabattModal").classList.add("hidden"));
   document.getElementById("rabattOkBtn").addEventListener("click", confirmRabatt);
 
+  // ---------- RESTESSEN ----------
+  // Unabhängig vom aktuellen Warenkorb: Sammel-Eingabe am Abend für übrig gebliebenes Essen.
+  let restKategorie = null;
+  let restItems = {};
+  let restFotoFile = null;
+  let restFotoPreviewUrl = null;
+
+  function restAnzahl() {
+    return Object.values(restItems).reduce((a, b) => a + b, 0);
+  }
+  function restWarenwert() {
+    return PRODUCTS.reduce((sum, p) => sum + (restItems[p.id] || 0) * p.price, 0);
+  }
+  function updateRestWertNote() {
+    const note = document.getElementById("restWertNote");
+    note.textContent = restAnzahl() > 0 ? "Warenwert: " + formatEUR(restWarenwert()) : "";
+  }
+
+  function renderRestProductList() {
+    const container = document.getElementById("restProductList");
+    container.innerHTML = PRODUCTS.map((p) => `
+      <div class="rest-row" data-id="${p.id}">
+        <span class="rest-name">${p.name}</span>
+        <div class="rest-stepper">
+          <button class="rest-btn btn-tap" data-action="minus" type="button">−</button>
+          <span class="rest-qty" id="restqty-${p.id}">0</span>
+          <button class="rest-btn btn-tap" data-action="plus" type="button">+</button>
+        </div>
+      </div>`).join("");
+
+    container.querySelectorAll(".rest-row").forEach((row) => {
+      const id = row.getAttribute("data-id");
+      row.querySelector('[data-action="minus"]').addEventListener("click", () => {
+        restItems[id] = Math.max(0, (restItems[id] || 0) - 1);
+        row.querySelector(".rest-qty").textContent = restItems[id];
+        updateRestWertNote();
+      });
+      row.querySelector('[data-action="plus"]').addEventListener("click", () => {
+        restItems[id] = (restItems[id] || 0) + 1;
+        row.querySelector(".rest-qty").textContent = restItems[id];
+        updateRestWertNote();
+      });
+    });
+  }
+
+  function openRestModal() {
+    restKategorie = null;
+    restItems = {};
+    restFotoZuruecksetzen();
+    document.querySelectorAll("#restCats .cat-btn").forEach((b) => b.classList.remove("selected"));
+    document.getElementById("restNotiz").value = "";
+    document.getElementById("restError").textContent = "";
+    renderRestProductList();
+    updateRestWertNote();
+    document.getElementById("restModal").classList.remove("hidden");
+  }
+
+  // ---------- Foto: bleibt in der Fotogalerie des Geräts, die Kasse speichert nur den Vermerk ----------
+  function restFotoZuruecksetzen() {
+    if (restFotoPreviewUrl) URL.revokeObjectURL(restFotoPreviewUrl);
+    restFotoFile = null;
+    restFotoPreviewUrl = null;
+    document.getElementById("restFotoVorschau").classList.add("hidden");
+    document.getElementById("restFotoInput").value = "";
+  }
+
+  document.getElementById("restFotoInput").addEventListener("change", (e) => {
+    const file = e.target.files && e.target.files[0];
+    if (!file) return;
+    if (restFotoPreviewUrl) URL.revokeObjectURL(restFotoPreviewUrl);
+    restFotoFile = file;
+    restFotoPreviewUrl = URL.createObjectURL(file);   // nur für die kurze Vorschau hier im Modal
+    document.getElementById("restFotoImg").src = restFotoPreviewUrl;
+    document.getElementById("restFotoVorschau").classList.remove("hidden");
+  });
+
+  document.getElementById("restFotoEntfernenBtn").addEventListener("click", restFotoZuruecksetzen);
+
+  document.querySelectorAll("#restCats .cat-btn").forEach((btn) => {
+    btn.addEventListener("click", () => {
+      document.querySelectorAll("#restCats .cat-btn").forEach((b) => b.classList.remove("selected"));
+      btn.classList.add("selected");
+      restKategorie = btn.getAttribute("data-kategorie");
+    });
+  });
+
+  // Speichert den Eintrag unabhängig vom Bon-Fluss: keine Umsatz-/Taler-/Gutschein-Buchung,
+  // erhöht auch nicht die Bon-Anzahl – ist keine Kundentransaktion.
+  function saveRestessen(eintrag) {
+    const history = loadHistory();
+    const dateKey = todayKey();
+    const day = normDay(history[dateKey] || {});
+    day.restEssen.push(eintrag);
+    history[dateKey] = day;
+    saveHistory(history);
+    sicherungSenden();
+  }
+
+  function confirmRest() {
+    const errEl = document.getElementById("restError");
+    if (!restKategorie) { errEl.textContent = "Bitte wählen: Team gegessen oder entsorgt."; return; }
+    if (restAnzahl() === 0) { errEl.textContent = "Bitte mindestens ein Produkt mit Menge auswählen."; return; }
+    const notiz = document.getElementById("restNotiz").value.trim();
+    if (!notiz) { errEl.textContent = "Bitte eine Notiz eingeben."; return; }
+
+    saveRestessen({
+      ts: new Date().toISOString(),
+      kategorie: restKategorie,
+      notiz: notiz,
+      items: { ...restItems },
+      wert: restWarenwert(),
+      // Nur ein Vermerk – das eigentliche Bild bleibt in der Fotogalerie des Geräts
+      fotoVorhanden: !!restFotoFile,
+      fotoName: restFotoFile ? restFotoFile.name : "",
+    });
+
+    restFotoZuruecksetzen();
+    document.getElementById("restModal").classList.add("hidden");
+    showToast("Restessen erfasst ✓");
+  }
+
+  document.getElementById("openRestBtn").addEventListener("click", openRestModal);
+  document.getElementById("restCancelBtn").addEventListener("click", () => document.getElementById("restModal").classList.add("hidden"));
+  document.getElementById("restOkBtn").addEventListener("click", confirmRest);
+
   // ---------- EXPORT ----------
   function buildExportText() {
     return JSON.stringify({
@@ -932,10 +1258,39 @@
       rows = rows.concat(detailRows);
     }
 
+    // Block 3: Restessen-Details (nur wenn vorhanden)
+    let restCount = 0;
+    let restRows = [];
+    restRows.push("RESTESSEN-DETAILS");
+    restRows.push(["Datum", "Uhrzeit", "Kategorie", "Produkte", "Warenwert EUR", "Notiz"].map(csvCell).join(";"));
+    dayKeys.forEach((k) => {
+      const d = normDay(history[k]);
+      d.restEssen.forEach((r) => {
+        restCount++;
+        const itemsText = Object.entries(r.items || {})
+          .filter(([, q]) => q > 0)
+          .map(([id, q]) => {
+            const prod = PRODUCTS.find((p) => p.id === id);
+            return `${q}x ${prod ? prod.name : id}`;
+          })
+          .join(", ");
+        const time = r.ts ? new Date(r.ts).toLocaleTimeString("de-DE", { hour: "2-digit", minute: "2-digit" }) : "";
+        const kategorieLabel = r.kategorie === "team" ? "Team gegessen" : "Entsorgt";
+        restRows.push([k, time, kategorieLabel, itemsText, csvNum(r.wert || 0), r.notiz || ""].map(csvCell).join(";"));
+      });
+    });
+
+    if (restCount > 0) {
+      rows.push("");
+      rows.push("");
+      rows = rows.concat(restRows);
+    }
+
     downloadFile(`bf-kasse-export-${todayKey()}.csv`, BOM + rows.join("\r\n"), "text/csv;charset=utf-8");
-    document.getElementById("exportMsg").textContent = specialCount > 0
-      ? "CSV-Datei erstellt ✓ (Tagesübersicht + Rabatt-Details in einer Datei)"
-      : "CSV-Datei erstellt ✓ (Tagesübersicht)";
+    const teile = ["Tagesübersicht"];
+    if (specialCount > 0) teile.push("Rabatt-Details");
+    if (restCount > 0) teile.push("Restessen-Details");
+    document.getElementById("exportMsg").textContent = "CSV-Datei erstellt ✓ (" + teile.join(" + ") + " in einer Datei)";
   }
 
   document.getElementById("exportCsvBtn").addEventListener("click", exportCsv);
@@ -963,6 +1318,7 @@
         cur.voucherValue += inc.voucherValue;
         cur.transactions += inc.transactions;
         cur.specials = cur.specials.concat(inc.specials);
+        cur.restEssen = cur.restEssen.concat(inc.restEssen);
         local[key] = cur;
       } else {
         local[key] = inc;
@@ -1027,6 +1383,11 @@
   // Sicherung: einmal kurz nach dem Start, danach regelmäßig
   setTimeout(sicherungSenden, 5000);
   setInterval(sicherungSenden, BACKUP_INTERVALL_MS);
+  // Mobile Browser pausieren Timer oft im Hintergrund (z. B. bei gesperrtem Bildschirm).
+  // Beim Zurückkehren deshalb sofort erneut sichern, statt bis zu 10 Min. zu warten.
+  document.addEventListener("visibilitychange", () => {
+    if (document.visibilityState === "visible") sicherungSenden();
+  });
 </script>
 </body>
 </html>
