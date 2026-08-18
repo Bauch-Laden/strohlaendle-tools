@@ -211,7 +211,7 @@
       <div class="footer-bottom-bar">
         <div class="brand">🍽️ Bauch &amp; Flamme Bedienung Hilfe <span class="version-tag" id="versionTag"></span></div>
         <div style="display:flex; gap:14px; align-items:center;">
-          <button class="link-btn btn-tap" id="openRestBtn">🍽️ Restessen</button>
+          <button class="link-btn btn-tap" id="openTagesendeBtn">🌙 Tagesende</button>
           <button class="link-btn btn-tap" id="openHistoryBtn">📋 Verlauf</button>
         </div>
       </div>
@@ -252,6 +252,36 @@
       Bei Einträgen mit 📷-Vermerk kannst du das passende Foto aus der Galerie auswählen – es wird nur für diesen Ausdruck kurz geladen, nicht gespeichert. Danach oben auf „Drucken" und im Druckdialog „Als PDF speichern" wählen.
     </div>
     <div id="restNachweisListe" style="padding: 0 20px 30px;"></div>
+  </div>
+
+  <!-- TAGESENDE-AUSWAHL -->
+  <div id="tagesendeModal" class="modal-overlay hidden">
+    <div class="modal-box">
+      <div class="modal-title">🌙 Tagesende</div>
+      <div class="modal-note" style="margin-top:0;">Was möchtest du erfassen?</div>
+      <button class="cat-btn btn-tap" id="tagesendeRestBtn" style="margin-top:10px;">🍽️ Restessen erfassen</button>
+      <button class="cat-btn btn-tap" id="tagesendeLessonsBtn">📝 Lessons Learned</button>
+      <div class="modal-actions">
+        <button class="modal-btn modal-btn-cancel btn-tap" id="tagesendeCancelBtn" style="width:100%;">Schließen</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- LESSONS-LEARNED-MODAL -->
+  <div id="lessonsModal" class="modal-overlay hidden">
+    <div class="modal-box" style="max-height:85vh; overflow-y:auto;">
+      <div class="modal-title">📝 Lessons Learned</div>
+      <div class="modal-note" style="margin-top:0;">Für das ganze Team sichtbar, alle Tage. Kurze Gedanken zum Tag – was lief gut, was anders machen, Kundenfeedback, Essen zu viel/wenig usw.</div>
+
+      <div id="lessonsListe" style="margin:12px 0;"></div>
+
+      <textarea class="modal-input modal-text-input" id="lessonsText" rows="3" placeholder="Neue Notiz eintippen…" style="width:100%; resize:vertical; font-family:inherit;"></textarea>
+      <div class="modal-error" id="lessonsError"></div>
+      <div class="modal-actions">
+        <button class="modal-btn modal-btn-cancel btn-tap" id="lessonsCloseBtn">Fertig</button>
+        <button class="modal-btn modal-btn-ok btn-tap" id="lessonsAddBtn">Hinzufügen</button>
+      </div>
+    </div>
   </div>
 
   <!-- RESTESSEN-MODAL -->
@@ -406,7 +436,7 @@
   }
 
   const STORAGE_KEY = "bauchladen_history_v1";
-  const SW_VERSION = "2.10.1";
+  const SW_VERSION = "2.11.1";
   const HISTORY_PASSWORD = "447546";
   let order = {}; // { productId: qty } für den aktuellen Bon
   let toastTimer = null;
@@ -421,6 +451,7 @@
       transactions: d.transactions || 0,
       specials: d.specials || [],
       restEssen: d.restEssen || [],
+      lessons: d.lessons || [],
     };
   }
 
@@ -734,6 +765,17 @@
           <div class="hidden" id="rest-${day.dateKey}">${restEntries}</div>`;
       }
 
+      // Detail-Einträge für Lessons Learned (aufklappbar)
+      let lessonsHtml = "";
+      if (day.lessons.length > 0) {
+        const lessonsEntries = day.lessons.map((l) => {
+          const time = l.ts ? new Date(l.ts).toLocaleTimeString("de-DE", { hour: "2-digit", minute: "2-digit" }) : "";
+          return `<div class="special-entry">${time ? "<b>" + time + " Uhr</b><br>" : ""}${escapeHtml(l.text)}</div>`;
+        }).join("");
+        lessonsHtml = `
+          <button class="details-btn btn-tap" data-lessonsday="${day.dateKey}">📝 Lessons Learned (${day.lessons.length})</button>
+          <div class="hidden" id="lessons-${day.dateKey}">${lessonsEntries}</div>`;
+      }
 
       return `
         <div class="day-card">
@@ -745,6 +787,7 @@
           <div class="day-items">${itemsHtml}</div>
           ${detailsHtml}
           ${restHtml}
+          ${lessonsHtml}
         </div>`;
     }).join("");
 
@@ -757,6 +800,12 @@
     container.querySelectorAll(".details-btn[data-restday]").forEach((btn) => {
       btn.addEventListener("click", () => {
         const el = document.getElementById("rest-" + btn.getAttribute("data-restday"));
+        if (el) el.classList.toggle("hidden");
+      });
+    });
+    container.querySelectorAll(".details-btn[data-lessonsday]").forEach((btn) => {
+      btn.addEventListener("click", () => {
+        const el = document.getElementById("lessons-" + btn.getAttribute("data-lessonsday"));
         if (el) el.classList.toggle("hidden");
       });
     });
@@ -1135,7 +1184,87 @@
     showToast("Restessen erfasst ✓");
   }
 
-  document.getElementById("openRestBtn").addEventListener("click", openRestModal);
+  // ---------- TAGESENDE: Auswahl zwischen Restessen und Lessons Learned ----------
+  document.getElementById("openTagesendeBtn").addEventListener("click", () => {
+    document.getElementById("tagesendeModal").classList.remove("hidden");
+  });
+  document.getElementById("tagesendeCancelBtn").addEventListener("click", () => {
+    document.getElementById("tagesendeModal").classList.add("hidden");
+  });
+  document.getElementById("tagesendeRestBtn").addEventListener("click", () => {
+    document.getElementById("tagesendeModal").classList.add("hidden");
+    openRestModal();
+  });
+  document.getElementById("tagesendeLessonsBtn").addEventListener("click", () => {
+    document.getElementById("tagesendeModal").classList.add("hidden");
+    openLessonsModal();
+  });
+
+  // ---------- LESSONS LEARNED ----------
+  // Einfache, wachsende Notizliste pro Tag – kein festes Formular, mehrere kurze Einträge möglich.
+  function saveLessonEintrag(text) {
+    const history = loadHistory();
+    const dateKey = todayKey();
+    const day = normDay(history[dateKey] || {});
+    day.lessons.push({ ts: new Date().toISOString(), text: text });
+    history[dateKey] = day;
+    saveHistory(history);
+    sicherungSenden();
+  }
+
+  function renderLessonsListe() {
+    const history = loadHistory();
+    const dayKeys = Object.keys(history)
+      .filter((k) => /^\d{4}-\d{2}-\d{2}$/.test(k))
+      .sort((a, b) => (a < b ? 1 : -1));   // neueste zuerst
+
+    const liste = document.getElementById("lessonsListe");
+    const tageMitNotizen = dayKeys
+      .map((k) => ({ dateKey: k, lessons: normDay(history[k]).lessons }))
+      .filter((t) => t.lessons.length > 0);
+
+    if (tageMitNotizen.length === 0) {
+      liste.innerHTML = '<div class="modal-note" style="margin:0;">Noch keine Notizen vorhanden.</div>';
+      return;
+    }
+
+    liste.innerHTML = tageMitNotizen.map(({ dateKey, lessons }) => {
+      const eintraege = lessons.map((l) => {
+        const time = l.ts ? new Date(l.ts).toLocaleTimeString("de-DE", { hour: "2-digit", minute: "2-digit" }) : "";
+        return `<div class="special-entry"><b>${time} Uhr</b><br>${escapeHtml(l.text)}</div>`;
+      }).join("");
+      const istHeute = dateKey === todayKey();
+      return `<div style="margin-bottom:6px;">
+        <div style="font-weight:700; font-size:13px; color:var(--mustard); margin-top:12px;">
+          ${formatDateKey(dateKey)}${istHeute ? " (heute)" : ""}
+        </div>
+        ${eintraege}
+      </div>`;
+    }).join("");
+  }
+
+  function openLessonsModal() {
+    document.getElementById("lessonsText").value = "";
+    document.getElementById("lessonsError").textContent = "";
+    renderLessonsListe();
+    document.getElementById("lessonsModal").classList.remove("hidden");
+  }
+
+  document.getElementById("lessonsAddBtn").addEventListener("click", () => {
+    const feld = document.getElementById("lessonsText");
+    const err = document.getElementById("lessonsError");
+    const text = feld.value.trim();
+    if (!text) { err.textContent = "Bitte einen Text eingeben."; return; }
+    err.textContent = "";
+    saveLessonEintrag(text);
+    feld.value = "";
+    renderLessonsListe();   // Fenster bleibt offen, neue Notiz erscheint sofort in der Liste
+    showToast("Notiz gespeichert ✓");
+  });
+  document.getElementById("lessonsCloseBtn").addEventListener("click", () => {
+    document.getElementById("lessonsModal").classList.add("hidden");
+  });
+
   document.getElementById("restCancelBtn").addEventListener("click", () => document.getElementById("restModal").classList.add("hidden"));
   document.getElementById("restOkBtn").addEventListener("click", confirmRest);
 
@@ -1287,10 +1416,31 @@
       rows = rows.concat(restRows);
     }
 
+    // Block 4: Lessons Learned (nur wenn vorhanden)
+    let lessonsCount = 0;
+    let lessonsRows = [];
+    lessonsRows.push("LESSONS-LEARNED");
+    lessonsRows.push(["Datum", "Uhrzeit", "Notiz"].map(csvCell).join(";"));
+    dayKeys.forEach((k) => {
+      const d = normDay(history[k]);
+      d.lessons.forEach((l) => {
+        lessonsCount++;
+        const time = l.ts ? new Date(l.ts).toLocaleTimeString("de-DE", { hour: "2-digit", minute: "2-digit" }) : "";
+        lessonsRows.push([k, time, l.text || ""].map(csvCell).join(";"));
+      });
+    });
+
+    if (lessonsCount > 0) {
+      rows.push("");
+      rows.push("");
+      rows = rows.concat(lessonsRows);
+    }
+
     downloadFile(`bf-kasse-export-${todayKey()}.csv`, BOM + rows.join("\r\n"), "text/csv;charset=utf-8");
     const teile = ["Tagesübersicht"];
     if (specialCount > 0) teile.push("Rabatt-Details");
     if (restCount > 0) teile.push("Restessen-Details");
+    if (lessonsCount > 0) teile.push("Lessons Learned");
     document.getElementById("exportMsg").textContent = "CSV-Datei erstellt ✓ (" + teile.join(" + ") + " in einer Datei)";
   }
 
@@ -1320,6 +1470,7 @@
         cur.transactions += inc.transactions;
         cur.specials = cur.specials.concat(inc.specials);
         cur.restEssen = cur.restEssen.concat(inc.restEssen);
+        cur.lessons = cur.lessons.concat(inc.lessons);
         local[key] = cur;
       } else {
         local[key] = inc;
