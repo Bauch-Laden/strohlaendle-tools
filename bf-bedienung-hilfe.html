@@ -406,7 +406,7 @@
   }
 
   const STORAGE_KEY = "bauchladen_history_v1";
-  const SW_VERSION = "2.10.0";
+  const SW_VERSION = "2.10.1";
   const HISTORY_PASSWORD = "447546";
   let order = {}; // { productId: qty } für den aktuellen Bon
   let toastTimer = null;
@@ -600,6 +600,7 @@
     if (special) day.specials.push(special);
     history[dateKey] = day;
     saveHistory(history);
+    sicherungSenden();   // sofort nach jedem Bon sichern (nicht erst nach 10 Minuten warten)
 
     // Bon ans Team-Display senden (funktioniert nur, wenn die App vom Display-Server
     // geladen wurde, z. B. am Pi). Fehler werden bewusst ignoriert — die Kasse
