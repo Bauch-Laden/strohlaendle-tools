@@ -108,6 +108,14 @@
   .bon.done .bon-card { opacity: 0.4; border-color: var(--sage); background: var(--panel); }
   .bon.expanded .bon-card { border-color: var(--mustard); background: linear-gradient(180deg, rgba(232,163,61,0.08), var(--panel)); }
 
+  /* Test-Bon aus dem Testmodus der Kasse: deutlich als "TEST" markiert, zählt nirgends mit */
+  .bon.test .bon-card { border-color: #C34DDB; border-width: 3px; }
+  .bon.test .bon-card::before {
+    content: "TEST"; position: absolute; top: 0.6vh; left: 50%; transform: translateX(-50%) rotate(-4deg);
+    background: #C34DDB; color: #fff; font-weight: 800; font-size: 1.7vh; letter-spacing: 0.1em;
+    padding: 0.3vh 1.4vw; border-radius: 0.6vh; z-index: 2; box-shadow: 0 2px 6px rgba(0,0,0,0.35);
+  }
+
   .done-badge {
     position: absolute; top: 1vh; right: 1vw;
     font-size: 3.6vh; color: var(--sage); line-height: 1; display: none;
@@ -170,7 +178,7 @@
   </footer>
 
 <script>
-  const DISPLAY_VERSION = "2.4.0";   // bei jeder Änderung an dieser Datei erhöhen
+  const DISPLAY_VERSION = "2.5.0";   // bei jeder Änderung an dieser Datei erhöhen
   const POLL_MS = 800;
   const VERBRAUCH_POLL_MS = 30000;   // Verbrauchsübersicht seltener aktualisieren
   const LONGPRESS_MS = 550;
@@ -279,6 +287,7 @@
 
       el.classList.toggle("done", done);
       el.classList.toggle("expanded", expanded);
+      el.classList.toggle("test", !!b.isTest);
       el.dataset.nr = nr;
 
       const nrEl = el.querySelector(".pos-nr");

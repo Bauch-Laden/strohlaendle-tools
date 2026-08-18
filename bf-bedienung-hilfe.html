@@ -19,6 +19,18 @@
   * { box-sizing: border-box; }
   html, body { margin: 0; padding: 0; height: 100%; background: var(--bg); font-family: 'DM Sans', sans-serif; -webkit-tap-highlight-color: transparent; }
   #app { max-width: 480px; margin: 0 auto; height: 100vh; display: flex; flex-direction: column; position: relative; }
+  #app.testmodus { outline: 4px solid var(--mustard); outline-offset: -4px; }
+
+  #testBanner {
+    flex-shrink: 0; background: repeating-linear-gradient(45deg, var(--mustard), var(--mustard) 12px, #1F2A24 12px, #1F2A24 24px);
+    color: #1F2A24; font-weight: 800; font-size: 13px; text-align: center;
+    padding: 8px 10px; display: flex; align-items: center; justify-content: center; gap: 10px; flex-wrap: wrap;
+  }
+  #testBanner button {
+    background: #1F2A24; color: var(--mustard); border: none; border-radius: 6px;
+    padding: 4px 10px; font-weight: 700; font-size: 12px; cursor: pointer; font-family: inherit;
+  }
+  .primary-btn.testmodus-btn { background: var(--mustard); border: 2px dashed #1F2A24; }
   #orderView { display: flex; flex-direction: column; height: 100%; min-height: 0; }
 
   ::-webkit-scrollbar { width: 6px; }
@@ -186,6 +198,10 @@
 </head>
 <body>
 <div id="app">
+  <div id="testBanner" class="hidden">
+    🧪 TESTMODUS AKTIV — Bestellungen werden NICHT gespeichert
+    <button type="button" id="testBannerAusBtn">Beenden</button>
+  </div>
 
   <!-- BESTELL-ANSICHT -->
   <div id="orderView">
@@ -211,6 +227,7 @@
       <div class="footer-bottom-bar">
         <div class="brand">🍽️ Bauch &amp; Flamme Bedienung Hilfe <span class="version-tag" id="versionTag"></span></div>
         <div style="display:flex; gap:14px; align-items:center;">
+          <button class="link-btn btn-tap" id="testModusBtn">🧪 Test</button>
           <button class="link-btn btn-tap" id="openTagesendeBtn">🌙 Tagesende</button>
           <button class="link-btn btn-tap" id="openHistoryBtn">📋 Verlauf</button>
         </div>
@@ -316,6 +333,19 @@
       <div class="modal-actions">
         <button class="modal-btn modal-btn-cancel btn-tap" id="restCancelBtn">Abbrechen</button>
         <button class="modal-btn modal-btn-ok btn-tap" id="restOkBtn">Speichern</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- TESTMODUS-PASSWORT-MODAL -->
+  <div id="testPwModal" class="modal-overlay hidden">
+    <div class="modal-box">
+      <div class="modal-title">🧪 Testmodus aktivieren</div>
+      <input type="password" inputmode="numeric" pattern="[0-9]*" maxlength="6" class="modal-input" id="testPwInput" placeholder="••••••" autocomplete="off">
+      <div class="modal-error" id="testPwError"></div>
+      <div class="modal-actions">
+        <button class="modal-btn modal-btn-cancel btn-tap" id="testPwCancelBtn">Abbrechen</button>
+        <button class="modal-btn modal-btn-ok btn-tap" id="testPwOkBtn">Bestätigen</button>
       </div>
     </div>
   </div>
@@ -436,9 +466,89 @@
   }
 
   const STORAGE_KEY = "bauchladen_history_v1";
-  const SW_VERSION = "2.11.1";
+  const SW_VERSION = "2.14.0";
   const HISTORY_PASSWORD = "447546";
   let order = {}; // { productId: qty } für den aktuellen Bon
+
+  // ---------- TESTMODUS ----------
+  // Bewusst NUR eine JavaScript-Variable, NICHT in localStorage — nach jedem Neuladen der Seite
+  // ist der Testmodus automatisch wieder aus. So kann er nie versehentlich aktiv bleiben.
+  let testModusAktiv = false;
+
+  const TEST_MODUS_PASSWORT = "111222";
+
+  function testModusAnzeigenAktualisieren() {
+    document.getElementById("app").classList.toggle("testmodus", testModusAktiv);
+    document.getElementById("testBanner").classList.toggle("hidden", !testModusAktiv);
+    document.getElementById("testModusBtn").textContent = testModusAktiv ? "🧪 Test aktiv" : "🧪 Test";
+    document.getElementById("nextCustomerBtn").classList.toggle("testmodus-btn", testModusAktiv);
+    document.getElementById("nextCustomerBtn").textContent = testModusAktiv ? "Test-Bon abschließen" : "Nächster Kunde";
+  }
+
+  function testModusAktivieren() {
+    testModusAktiv = true;
+    testModusAnzeigenAktualisieren();
+    showToast("Testmodus aktiviert 🧪 — nichts wird gespeichert");
+  }
+
+  // Zum Verlassen bewusst OHNE Passwort — der Testmodus muss sich immer sofort beenden lassen.
+  function testModusDeaktivieren() {
+    testModusAktiv = false;
+    testModusAnzeigenAktualisieren();
+  }
+
+  function openTestPwModal() {
+    document.getElementById("testPwInput").value = "";
+    document.getElementById("testPwError").textContent = "";
+    document.getElementById("testPwModal").classList.remove("hidden");
+    setTimeout(() => document.getElementById("testPwInput").focus(), 50);
+  }
+
+  function checkTestPw() {
+    const eingabe = document.getElementById("testPwInput").value.trim();
+    if (eingabe !== TEST_MODUS_PASSWORT) {
+      document.getElementById("testPwError").textContent = "Passwort stimmt nicht.";
+      return;
+    }
+    document.getElementById("testPwModal").classList.add("hidden");
+    testModusAktivieren();
+  }
+
+  document.getElementById("testModusBtn").addEventListener("click", () => {
+    if (testModusAktiv) testModusDeaktivieren();
+    else openTestPwModal();
+  });
+  document.getElementById("testBannerAusBtn").addEventListener("click", testModusDeaktivieren);
+  document.getElementById("testPwCancelBtn").addEventListener("click", () => document.getElementById("testPwModal").classList.add("hidden"));
+  document.getElementById("testPwOkBtn").addEventListener("click", checkTestPw);
+  document.getElementById("testPwInput").addEventListener("keydown", (e) => { if (e.key === "Enter") checkTestPw(); });
+
+  // Wird anstelle von saveBon() aufgerufen, solange der Testmodus aktiv ist: setzt nur den
+  // Warenkorb zurück, rührt Umsatz/Verlauf/Sicherung/Team-Display nicht an.
+  function saveTestBon() {
+    // Genau wie bei einem echten Bon ans Team-Display senden, damit das komplette System
+    // (inkl. Hütten-Bildschirm + Ausgabe-Tablet) durchgetestet werden kann — nur eben mit
+    // isTest:true markiert. Es wird NICHTS in Umsatz/Verlauf/Sicherung geschrieben.
+    try {
+      const bonItems = Object.entries(order)
+        .filter(([, q]) => q > 0)
+        .map(([id, q]) => {
+          const p = PRODUCTS.find((x) => x.id === id);
+          return { name: p ? p.name : id, qty: q };
+        });
+      if (bonItems.length > 0 && window.location.protocol.startsWith("http")) {
+        fetch(window.location.origin + "/api/bon", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ ts: new Date().toISOString(), items: bonItems, isTest: true }),
+        }).catch(() => {});
+      }
+    } catch (e) { /* Display optional — niemals die Kasse blockieren */ }
+
+    order = {};
+    renderOrder();
+    showToast("Test-Bon abgeschlossen — nicht gespeichert 🧪");
+  }
   let toastTimer = null;
 
   // Stellt sicher, dass ein Tages-Datensatz alle Felder hat (auch ältere Datensätze aus v1.x)
@@ -674,6 +784,7 @@
   function nextCustomer() {
     const { totalItems, totalPrice } = currentTotals();
     if (totalItems === 0) return;
+    if (testModusAktiv) { saveTestBon(); return; }
     saveBon({ eurAmount: totalPrice });
     showToast("Bon gespeichert ✓");
   }
@@ -969,6 +1080,7 @@
     const eurRest = totalPrice - taler;
     document.getElementById("talerModal").classList.add("hidden");
     mitChipPruefung(() => {
+      if (testModusAktiv) { saveTestBon(); return; }
       saveBon({ eurAmount: eurRest, talerAmount: taler });
       showToast(`Bon gespeichert ✓ (${taler} Taler${eurRest > 0 ? " + " + formatEUR(eurRest) : ""})`);
     });
@@ -1049,6 +1161,7 @@
     document.getElementById("rabattModal").classList.add("hidden");
 
     mitChipPruefung(() => {
+      if (testModusAktiv) { saveTestBon(); return; }
       if (rabattSelection.discount === 50) {
         saveBon({ eurAmount: totalPrice / 2, special });
         showToast(`Bon gespeichert ✓ (50 %, ${formatEUR(totalPrice / 2)})`);

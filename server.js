@@ -9,7 +9,7 @@ const http = require("http");
 const fs = require("fs");
 const path = require("path");
 
-const SERVER_VERSION = "1.9.0";  // bei jeder Änderung an dieser Datei erhöhen
+const SERVER_VERSION = "1.10.0";  // bei jeder Änderung an dieser Datei erhöhen
 const PORT = 3000;
 const DONE_VISIBLE_MS = 400; // wie lange ein abgehakter Bon noch sichtbar bleibt
 const SAFETY_CAP = 300;       // Notbremse gegen unbegrenztes Wachsen (offene Bons)
@@ -95,6 +95,7 @@ function sanitizeBon(raw) {
     itemsDone: items.map(() => 0),   // pro Position: wie viele Stück bereits ausgegeben sind
     done: false,
     doneAt: null,
+    isTest: !!raw.isTest,   // Test-Bon aus der Kasse (Testmodus) – zählt nicht mit, wird nur markiert angezeigt
   };
 }
 
