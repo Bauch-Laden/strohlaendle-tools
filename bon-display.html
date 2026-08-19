@@ -177,7 +177,7 @@
   </footer>
 
 <script>
-  const DISPLAY_VERSION = "2.6.0";   // bei jeder Änderung an dieser Datei erhöhen
+  const DISPLAY_VERSION = "2.7.0";   // bei jeder Änderung an dieser Datei erhöhen
   const POLL_MS = 800;
   const VERBRAUCH_POLL_MS = 30000;   // Verbrauchsübersicht seltener aktualisieren
   const LONGPRESS_MS = 550;
@@ -234,6 +234,11 @@
   function render(allBons) {
     const list = document.getElementById("list");
     const waitingEl = document.getElementById("waiting");
+
+    // Merken, ob die Ansicht GERADE JETZT (vor dieser Aktualisierung) am rechten Standardplatz war.
+    // Nur dann wird nach dem Update automatisch wieder dorthin gestellt — wer gerade aktiv zu
+    // älteren/neueren Bestellungen gescrollt hat, wird dabei bewusst nicht unterbrochen.
+    const warAmStandardplatz = Math.abs(list.scrollLeft - (list.scrollWidth - list.clientWidth)) < 4;
 
     // Chronologisch aufsteigend nur für die NUMMERIERUNG (älteste = Nr. 1, bleibt stabil).
     const sorted = (allBons || []).slice().sort((a, b) => new Date(a.ts) - new Date(b.ts));
@@ -308,6 +313,11 @@
     // Beim allerersten Füllen der Liste direkt rechtsbündig zeigen (älteste 5 sichtbar)
     if (!list.dataset.initialised) {
       list.dataset.initialised = "1";
+      requestAnimationFrame(() => scrollZurRechten(false));
+    } else if (warAmStandardplatz) {
+      // War die Ansicht am Standardplatz und ist gerade z. B. eine neue Bestellung dazugekommen:
+      // sofort wieder an den (neuen) rechten Rand nachziehen, statt "1 bis 5" zu "2 bis 6" abdriften
+      // zu lassen. Ohne Animation, damit es nicht wie ein extra Wisch-Effekt aussieht.
       requestAnimationFrame(() => scrollZurRechten(false));
     }
   }
