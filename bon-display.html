@@ -77,7 +77,6 @@
   .list {
     flex: 1; min-height: 0; position: relative;
     display: flex; overflow-x: auto; overflow-y: hidden;
-    justify-content: flex-end;
     gap: 1.2vw; padding: 0 0.2vw;
     scroll-behavior: smooth;
   }
@@ -178,7 +177,7 @@
   </footer>
 
 <script>
-  const DISPLAY_VERSION = "2.5.0";   // bei jeder Änderung an dieser Datei erhöhen
+  const DISPLAY_VERSION = "2.6.0";   // bei jeder Änderung an dieser Datei erhöhen
   const POLL_MS = 800;
   const VERBRAUCH_POLL_MS = 30000;   // Verbrauchsübersicht seltener aktualisieren
   const LONGPRESS_MS = 550;
@@ -284,6 +283,12 @@
 
       // Reihenfolge im DOM = neueste links … älteste rechts (für den Scroll-Effekt); nur bei Bedarf umsortieren
       if (list.children[idx] !== el) list.insertBefore(el, list.children[idx] || null);
+
+      // Nur die erste Karte bekommt den Auto-Rand: Bei wenigen Bestellungen rutscht die ganze
+      // Reihe dadurch rechtsbündig; bei Überlauf zieht der Browser den Rand automatisch auf 0
+      // zusammen — anders als bei justify-content:flex-end bleibt der Inhalt dadurch normal
+      // per Wischen/Scrollen erreichbar.
+      el.style.marginLeft = idx === 0 ? "auto" : "";
 
       el.classList.toggle("done", done);
       el.classList.toggle("expanded", expanded);
