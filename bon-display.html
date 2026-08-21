@@ -177,7 +177,7 @@
   </footer>
 
 <script>
-  const DISPLAY_VERSION = "2.7.0";   // bei jeder Änderung an dieser Datei erhöhen
+  const DISPLAY_VERSION = "2.8.0";   // bei jeder Änderung an dieser Datei erhöhen
   const POLL_MS = 800;
   const VERBRAUCH_POLL_MS = 30000;   // Verbrauchsübersicht seltener aktualisieren
   const LONGPRESS_MS = 550;
@@ -527,13 +527,21 @@
     verbrauchAnzeigen(verbrauchOffen);
   });
 
+  // Wichtig: LOKALES Datum berechnen, genau wie todayKey() in der Kasse — toISOString() würde
+  // stattdessen die UTC-Zeit liefern, was zwischen Mitternacht und 2 Uhr (Sommerzeit) zum
+  // falschen Vortag führen und die Verbrauchsübersicht "leer" erscheinen lassen würde.
+  function heutigesDatum() {
+    const d = new Date();
+    return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, "0")}-${String(d.getDate()).padStart(2, "0")}`;
+  }
+
   function verbrauchLaden() {
     fetch("/api/backup?t=" + Date.now(), { cache: "no-store" })
       .then((r) => r.json())
       .then((a) => {
         const panel = document.getElementById("verbrauchPanel");
         if (!a.ok) { panel.innerHTML = '<div class="verbrauch-leer">Noch keine Daten für heute.</div>'; return; }
-        const heute = new Date().toISOString().slice(0, 10);
+        const heute = heutigesDatum();
         const tag = (a.daten.history || {})[heute];
         if (!tag) { panel.innerHTML = '<div class="verbrauch-leer">Noch keine Verkäufe heute erfasst.</div>'; return; }
         const produkte = tag.products || {};

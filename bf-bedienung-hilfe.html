@@ -466,7 +466,7 @@
   }
 
   const STORAGE_KEY = "bauchladen_history_v1";
-  const SW_VERSION = "2.14.0";
+  const SW_VERSION = "2.14.1";
   const HISTORY_PASSWORD = "447546";
   let order = {}; // { productId: qty } für den aktuellen Bon
 
@@ -707,7 +707,8 @@
   // Zusätzlich zur lokalen Speicherung: Die Kasse funktioniert auch ohne Pi vollständig.
   const BACKUP_INTERVALL_MS = 10 * 60 * 1000;   // alle 10 Minuten
 
-  function sicherungSenden() {
+  function sicherungSenden(versuch) {
+    versuch = versuch || 1;
     try {
       if (location.protocol !== "http:") return;   // von GitHub Pages aus nicht möglich
       const history = loadHistory();
@@ -721,8 +722,14 @@
           gesichertAm: new Date().toISOString(),
           history: history,
         }),
-        keepalive: true,
-      }).catch(() => {});
+        // Bewusst OHNE keepalive: Diese Option begrenzt Anfragen auf 64 KB — bei einem
+        // vollen Tagesverlauf (Bons, Restessen, Notizen) wird das leicht überschritten,
+        // und die Anfrage würde dann lautlos verworfen, ohne dass irgendwer es merkt.
+      }).catch(() => {
+        // Einmaliger automatischer Wiederholungsversuch nach kurzer Pause, falls es z. B.
+        // an einem kurzen WLAN-Hänger lag.
+        if (versuch < 2) setTimeout(() => sicherungSenden(versuch + 1), 3000);
+      });
     } catch (e) { /* Sicherung ist optional – niemals die Kasse stören */ }
   }
 
